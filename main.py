@@ -20,6 +20,7 @@ In blog, talk about pygame
 		floppy: https://github.com/Code-Bullet/Flappy-Bird-AI/blob/master/flappyBird/Population.js 
 		
 		Noteworthy that it does not jump to time the pipe (so it will pass the pipe in the middle). this might eb solved with a deeper neural network
+		better fitness algorithm. adapt weights stronger, which failed (hit upper pipe? bad fitness on upper pipe distance - hit ground? bad fitness there)
 """
 
 #Initialize constants
@@ -28,12 +29,16 @@ HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
 Gen788BestOfBest = [ 1.39379687, -0.77627931, -0.59737657, -0.04154869] #Pretty good bird - not the best, but pretty good
-# Good genes after changes [ 1.20232449 -0.69404621 -0.49657121  0.01391649] (Generation 12 - beaten at prev score of 33 - currently at score 187)
+#Good genes - Easy Mode - Simple Network [-0.01013385 -2.08968663  0.02231135 -0.03363192] (Generation 84 - beaten at prev score of 202)
+#Good Genes - Easy Mode - Complex Network - New Highscore in Generation 57 with score 78. Genes: [-0.33553857  0.44772987 -2.10783391  0.23475919 -0.11781871 -0.60157116]
 FPSSES = 60 #Increase by pressing +/-
+VELOCITYGAIN = -15 #hardmode
+#VELOCITYGAIN = -12 #easymode
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself
-birdView = True # Set to false, if you don't want to see what the birds see
+birdView = False # Set to false, if you don't want to see what the birds see
+HIGHDETAILS = False # Set to false to efficiently train.
 
 #pygame initialization
 pygame.init()
@@ -153,33 +158,51 @@ def draw(window):
 	INPUT: window - Here will be drawn.
 	OUTPUT: None
 	"""
-	#print background
-	window.blit(backgroundPic, (0,0))
-	
-	#print clouds
-	for c in clouds:
-		window.blit(cloudPic, (c.x, c.y))
+
+	if (not HIGHDETAILS):
+		pygame.draw.rect(window, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
+		for p in pipes:
+			pygame.draw.rect(window, (255, 0, 0), (p.x, 0, 30, p.uppery))
+			pygame.draw.rect(window, (255, 0, 0), (p.x, p.lowery, 30, HEIGHT))
 		
-	#print pipes
-	for p in pipes:
-		window.blit(upperPipePic, (p.x, p.uppery-HEIGHT-160))
-		window.blit(lowerPipePic, (p.x, p.lowery))
+	if (HIGHDETAILS):
+		#print background
+		window.blit(backgroundPic, (0,0))
 		
-	#birds
-	for player in multiPlayer:
-		if (player.alive):
-			topleft = (BLOCKSIZE, player.y)
-			rot = player.velocity*-5
-			if (rot < -90): # Look down, not backwards. silly block
-				rot = -90
-			rotated_block = pygame.transform.rotate(blockPic, rot)
-			new_rect = rotated_block.get_rect(center = blockPic.get_rect(topleft = topleft).center)
+		#print clouds
+		for c in clouds:
+			window.blit(cloudPic, (c.x, c.y))
 			
-			window.blit(rotated_block, new_rect.topleft)
-			if (birdView): # Draw what the birs can see
-				pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + BLOCKSIZE/2))
-				pygame.draw.line(window, (0, 255, 0), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + player.distanceTop))
-				pygame.draw.line(window, (0, 0, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + player.distanceBot))
+		#print pipes
+		for p in pipes:
+			window.blit(upperPipePic, (p.x, p.uppery-HEIGHT-160))
+			window.blit(lowerPipePic, (p.x, p.lowery))
+			
+	#birds
+	drewBird = False
+	for player in multiPlayer:
+		
+		if (player.alive):
+			if (HIGHDETAILS):
+				topleft = (BLOCKSIZE, player.y)
+				rot = player.velocity*-5
+				if (rot < -90): # Look down, not backwards. silly block
+					rot = -90
+				rotated_block = pygame.transform.rotate(blockPic, rot)
+				new_rect = rotated_block.get_rect(center = blockPic.get_rect(topleft = topleft).center)
+				
+				window.blit(rotated_block, new_rect.topleft)
+				
+				if (birdView): # Draw what the birds can see
+					pygame.draw.line(window, (0, 255, 0), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + player.distanceTop))
+					pygame.draw.line(window, (0, 0, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + player.distanceBot))
+					pygame.draw.line(window, (0, 0, 0), (20 + BLOCKSIZE/2, player.distanceCeil + BLOCKSIZE/2), (10, 0))
+					pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (10, player.y + player.distanceGround))
+				
+			elif ( (not HIGHDETAILS) and (not drewBird) ):
+				pygame.draw.rect(window, (0, 255, 0), (20,  player.y, BLOCKSIZE, BLOCKSIZE))
+				drewBird = True
+
 				
 	
 #Let's roll! err.. fly!
@@ -191,8 +214,13 @@ while True: # the game loop.
 	#Button controlling
 	for event in pygame.event.get():
 		if (event.type == 5) and (running) and (singlePlayer.alive): #click
-			singlePlayer.velocity = -15
-			print("clicked")
+			singlePlayer.velocity = VELOCITYGAIN
+			if (AI):
+				print("Score of alive birds:")
+				for i in range(len(multiPlayer)):
+					player = multiPlayer[i]
+					if (player.alive):
+						print("Genes of {}: {}".format(i, player.weights))
 		elif (event.type == 5) and (not running) and (not singlePlayer.alive):
 			init() #restart
 		elif (event.type == 2): #keydown
@@ -261,13 +289,16 @@ while True: # the game loop.
 				
 				player.distanceTop = p.uppery - player.y
 				player.distanceBot = p.lowery - player.y
+				player.distanceCeil = player.y 
+				player.distanceGround = HEIGHT - player.y
+				
 				player.distanceX = p.x
 				player.fitness += 0.01
 				currentfitness = player.fitness
 				
 				#Jump or not?
 				if ( (AI) and (player.thinkIfJump()) ):
-					player.velocity = -15
+					player.velocity = VELOCITYGAIN
 	
 		#TODO set highscore for non ai
 	

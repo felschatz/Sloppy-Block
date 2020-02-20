@@ -7,6 +7,8 @@ class Boord:
 	distanceBot = 0
 	distanceTop = 0
 	distanceX = 0
+	distanceCeil = 0
+	distanceGround = 0
 	fitness = 0
 	alive = True
 	weights = [] 
@@ -22,20 +24,22 @@ class Boord:
 		self.distanceBot = 0
 		self.distanceTop = 0
 		self.distanceX = 0
+		self.distanceGround = 0
+		self.distanceCeil = 0
 		self.fitness = 0
 		self.alive = True
 		if (male == None): #New Bird, no parents
-			self.weights = np.random.normal(scale=1 / 4**.5, size=4)
+			self.weights = np.random.normal(scale=1 / 4**.5, size=6)
 		elif (female == None): #Only one Parent (self mutate)
 			self.weights = male.weights
 			self.mutate()
 		else: # Two parents - Breed.
-			self.weights = np.random.normal(scale=1 / 4**.5, size=4)	
+			self.weights = np.random.normal(scale=1 / 4**.5, size=6)	
 			self.breed(male, female)
 		
 	def thinkIfJump(self):
 		BIAS = 0.5
-		prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX], self.weights))
+		prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX, self.distanceCeil, self.distanceGround], self.weights))
 		if (prediction+BIAS > 0.5):
 			return True
 		else:
