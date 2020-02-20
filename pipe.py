@@ -9,4 +9,4 @@ class pipe:
 		top = random.randint(0,HEIGHT-100)
 		self.uppery = random.randint(0,HEIGHT-140) # We wanna show something on the lower end.
 		self.lowery = self.uppery + 120
-		self.x = WIDTH+10
+		self.x = WIDTH+random.randint(0,15) #randomize distance of pipes so the bird can learn better
