@@ -21,6 +21,11 @@ In blog, talk about pygame
 		
 		Noteworthy that it does not jump to time the pipe (so it will pass the pipe in the middle). this might eb solved with a deeper neural network
 		better fitness algorithm. adapt weights stronger, which failed (hit upper pipe? bad fitness on upper pipe distance - hit ground? bad fitness there)
+		
+		core differences to the known original:
+			Harder. The jumping power is far closer to the length of the pipe opening
+			Harder. The original has the pipe opening starting closer to the middle
+			Harder. The pipe distance varies and is not always the same
 """
 
 #Initialize constants
@@ -154,11 +159,14 @@ def initCloud(w = WIDTH):
 def draw(window):
 	""" The draw method, which is called within the FPS or as soon as possible (if slower)
 	It handles the background, clouds, pipes, player(s) and information
+	If the static variable HIGHDETAILS is set it will print all birds and nice pictures and rotations.
+	If HIGHDETAILS is not set, only one bird will be drawn also everything is rectangles instead of pictures
 
 	INPUT: window - Here will be drawn.
 	OUTPUT: None
 	"""
 
+	#Low Detail mode.
 	if (not HIGHDETAILS):
 		pygame.draw.rect(window, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
 		for p in pipes:
@@ -199,7 +207,7 @@ def draw(window):
 					pygame.draw.line(window, (0, 0, 0), (20 + BLOCKSIZE/2, player.distanceCeil + BLOCKSIZE/2), (10, 0))
 					pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (10, player.y + player.distanceGround))
 				
-			elif ( (not HIGHDETAILS) and (not drewBird) ):
+			elif ( (not HIGHDETAILS) and (not drewBird) ): #Low detail mode - just one bird
 				pygame.draw.rect(window, (0, 255, 0), (20,  player.y, BLOCKSIZE, BLOCKSIZE))
 				drewBird = True
 

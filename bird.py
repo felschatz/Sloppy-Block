@@ -29,17 +29,26 @@ class Boord:
 		self.fitness = 0
 		self.alive = True
 		if (male == None): #New Bird, no parents
+			#complex network
 			self.weights = np.random.normal(scale=1 / 4**.5, size=6)
+			#easy network
+			self.weights = np.random.normal(scale=1 / 4**.5, size=4)
 		elif (female == None): #Only one Parent (self mutate)
 			self.weights = male.weights
 			self.mutate()
 		else: # Two parents - Breed.
+			#complex network
 			self.weights = np.random.normal(scale=1 / 4**.5, size=6)	
+			#easy network
+			self.weights = np.random.normal(scale=1 / 4**.5, size=4)
 			self.breed(male, female)
 		
 	def thinkIfJump(self):
 		BIAS = 0.5
+		#complex network
 		prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX, self.distanceCeil, self.distanceGround], self.weights))
+		#easy network
+		#prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX], self.weights))
 		if (prediction+BIAS > 0.5):
 			return True
 		else:
