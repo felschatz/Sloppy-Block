@@ -17,7 +17,9 @@ In blog, talk about pygame
 		https://heartbeat.fritz.ai/automating-chrome-dinosaur-game-part-1-290578f13907
 		https://github.com/aayusharora/GeneticAlgorithms/blob/master/part1/src/nn.js
 		
-		floppy: https://github.com/Code-Bullet/Flappy-Bird-AI/blob/master/flappyBird/Population.js
+		floppy: https://github.com/Code-Bullet/Flappy-Bird-AI/blob/master/flappyBird/Population.js 
+		
+		Noteworthy that it does not jump to time the pipe (so it will pass the pipe in the middle). this might eb solved with a deeper neural network
 """
 
 #Initialize constants
@@ -30,7 +32,8 @@ Gen788BestOfBest = [ 1.39379687, -0.77627931, -0.59737657, -0.04154869] #Pretty 
 FPSSES = 60 #Increase by pressing +/-
 
 ReplayBest = False #Set to true, if you want to use trained network
-AI = False # Set to false, if you want to play yourself
+AI = True # Set to false, if you want to play yourself
+birdView = True # Set to false, if you don't want to see what the birds see
 
 #pygame initialization
 pygame.init()
@@ -173,6 +176,11 @@ def draw(window):
 			new_rect = rotated_block.get_rect(center = blockPic.get_rect(topleft = topleft).center)
 			
 			window.blit(rotated_block, new_rect.topleft)
+			if (birdView): # Draw what the birs can see
+				pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + BLOCKSIZE/2))
+				pygame.draw.line(window, (0, 255, 0), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + player.distanceTop))
+				pygame.draw.line(window, (0, 0, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + player.distanceBot))
+				
 	
 #Let's roll! err.. fly!
 init()
@@ -183,7 +191,7 @@ while True: # the game loop.
 	#Button controlling
 	for event in pygame.event.get():
 		if (event.type == 5) and (running) and (singlePlayer.alive): #click
-			singlePlayer.velocity = -10
+			singlePlayer.velocity = -15
 			print("clicked")
 		elif (event.type == 5) and (not running) and (not singlePlayer.alive):
 			init() #restart
@@ -192,7 +200,7 @@ while True: # the game loop.
 				FPSSES -= 15
 			elif (event.key == pygame.K_RIGHT):	
 				FPSSES += 15
-			else:
+			elif (event.key == 113):
 				pygame.quit()
 				sys.exit()
 	
@@ -250,15 +258,16 @@ while True: # the game loop.
 				
 				#Update what the bird sees to make decisions
 				p = pipes[0] # Closest pipe
+				
 				player.distanceTop = p.uppery - player.y
-				player.distanceBot = p.lowery + player.y
+				player.distanceBot = p.lowery - player.y
 				player.distanceX = p.x
 				player.fitness += 0.01
 				currentfitness = player.fitness
 				
 				#Jump or not?
 				if ( (AI) and (player.thinkIfJump()) ):
-					player.velocity = -10
+					player.velocity = -15
 	
 		#TODO set highscore for non ai
 	
@@ -287,7 +296,7 @@ while True: # the game loop.
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*4))
 		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)".format(FPSSES), True, (0, 0, 128))
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*5))
-		text = littlefont.render("Press something to quit".format(FPSSES), True, (0, 0, 128))
+		text = littlefont.render("Press q to quit".format(FPSSES), True, (0, 0, 128))
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*6))
 		
 	else: #Player is dead (only seen, if user plays)
