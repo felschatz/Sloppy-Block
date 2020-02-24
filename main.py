@@ -21,11 +21,26 @@ In blog, talk about pygame
 		
 		Noteworthy that it does not jump to time the pipe (so it will pass the pipe in the middle). this might eb solved with a deeper neural network
 		better fitness algorithm. adapt weights stronger, which failed (hit upper pipe? bad fitness on upper pipe distance - hit ground? bad fitness there)
+		Mutation method change - instead of taking average of first two birds - exchange whole genes
+		
+		Screenshots of complex and easy network with connections
+		
+		Possible Improvement: Only breed if died not too far from each other.
 		
 		core differences to the known original:
 			Harder. The jumping power is far closer to the length of the pipe opening
 			Harder. The original has the pipe opening starting closer to the middle
 			Harder. The pipe distance varies and is not always the same
+			
+		Making the game easier (decrease jump strength, increase distance between the pipes) makes the network learn much faster, since the error tolerance is higher
+		
+		tackle local optimum problem, if no improvement has been made over 10 generations
+		
+		adapt mutations based on score (the higher the score, the lower the mutation)
+		
+		dependencies
+		
+		BirdView, singleplayer, etc. via variables on run
 """
 
 #Initialize constants
@@ -33,18 +48,62 @@ WIDTH = 640 #screensize
 HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
-Gen788BestOfBest = [ 1.39379687, -0.77627931, -0.59737657, -0.04154869] #Pretty good bird - not the best, but pretty good
-#Good genes - Easy Mode - Simple Network [-0.01013385 -2.08968663  0.02231135 -0.03363192] (Generation 84 - beaten at prev score of 202)
-#Good Genes - Easy Mode - Complex Network - New Highscore in Generation 57 with score 78. Genes: [-0.33553857  0.44772987 -2.10783391  0.23475919 -0.11781871 -0.60157116]
+startWithGenes = [-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.00808077]
+#Agent1
+#[-0.00929749, -1.00681071,  0.18271884,  0.05724841,  0.03691923]
+#[-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.00808077]
+#Agent2
+#[ 4.91317090e-04, -1.35293646e+00,  2.38520797e-01, -1.33855450e-02, 5.96446731e-01]
+#Agent3
+#[ 0.00629361 -1.77223725 -0.47061318 -0.08176     0.07842931]
+#[ 0.00629361 -1.77223725 -0.41061318 -0.15676     0.10342931]
+#[ 0.00629361 -1.79723725 -0.35561318 -0.08176     0.05842931]
+#[ 0.00629361 -1.77223725 -0.37561318 -0.08176     0.07842931]
+#[ 0.00629361 -1.82723725 -0.47061318 -0.08176     0.07842931]
+#[-0.01370639 -1.85723725 -0.50061318 -0.08176     0.07842931]
+#[ 0.00629361 -1.77223725 -0.34561318 -0.08176     0.15342931]
+#[-0.01870639 -1.77223725 -0.46061318 -0.08176     0.07842931]
+#[ 0.00629361 -1.84723725 -0.44061318 -0.08176     0.07842931]
+#[ 0.00629361 -1.77223725 -0.47061318 -0.08176     0.00342931]
+
 FPSSES = 60 #Increase by pressing +/-
-VELOCITYGAIN = -15 #hardmode
-#VELOCITYGAIN = -12 #easymode
+#VELOCITYGAIN = -15 #hardmode
+VELOCITYGAIN = -13 #easymode
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself
-birdView = False # Set to false, if you don't want to see what the birds see
-HIGHDETAILS = False # Set to false to efficiently train.
+birdView = True # Set to false, if you don't want to see what the birds see
+HIGHDETAILS = True # Set to false to efficiently train.
 
+for opt in sys.argv:
+	if (opt == "main.py"):
+		continue
+	elif ( (opt == "-h") or (opt == "--help") ):
+		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
+		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
+		print("--humanPlayer (-p): Allows the human to fly instead of the birds")
+		print("--noBirdView (-b): Disables the bird view (colored lines)")
+		print("--lowDetails (-d): Reduces details and thus increases FPS")
+		print("--help (-h): Show help")
+		sys.exit()
+	elif opt in ("-r", "--replayBest"):
+		ReplayBest = True
+	elif opt in ("-p", "--humanPlayer"):
+		AI = False
+	elif opt in ("-b", "--noBirdView"):
+		birdView = False
+	elif opt in ("-d", "--lowDetails"):
+		HIGHDETAILS = False
+	else:
+		print("Unknown argument.\r\n")
+		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
+		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
+		print("--humanPlayer (-p): Allows the human to fly instead of the birds")
+		print("--noBirdView (-b): Disables the bird view (colored lines)")
+		print("--lowDetails (-d): Reduces details and thus increases FPS")
+		print("--help (-h): Show help")
+		sys.exit()
+   
 #pygame initialization
 pygame.init()
 fps = pygame.time.Clock()
@@ -135,7 +194,7 @@ def init():
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
 			
 			if (ReplayBest): #Used to replay a very good bird
-				multiPlayer[2].setWeights(Gen788BestOfBest)
+				multiPlayer[2].setWeights(startWithGenes)
 			
 			
 			
@@ -145,7 +204,10 @@ def initPipe(w = WIDTH):
 	INPUT: w - The width of the screen. The pipe will be created to the right of it
 	OUTPUT: the initiated pipe inside of the global pipes list
 	"""
-	return pipes.append(pipe.pipe(w, HEIGHT))
+	dist = 0
+	for p in pipes:
+		dist = p.x
+	return pipes.append(pipe.pipe(w, HEIGHT, dist))
 	
 def initCloud(w = WIDTH):
 	"""Initializes a cloud, which will scroll in from the right, but slower than a pipe
@@ -204,8 +266,10 @@ def draw(window):
 				if (birdView): # Draw what the birds can see
 					pygame.draw.line(window, (0, 255, 0), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + player.distanceTop))
 					pygame.draw.line(window, (0, 0, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (BLOCKSIZE/2 + player.distanceX, player.y + player.distanceBot))
-					pygame.draw.line(window, (0, 0, 0), (20 + BLOCKSIZE/2, player.distanceCeil + BLOCKSIZE/2), (10, 0))
-					pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (10, player.y + player.distanceGround))
+					pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2 + player.velocity))
+					pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2 - player.velocity))
+					#pygame.draw.line(window, (0, 0, 0), (20 + BLOCKSIZE/2, player.distanceCeil + BLOCKSIZE/2), (10, 0))
+					#pygame.draw.line(window, (255, 255, 255), (20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2), (10, player.y + player.distanceGround))
 				
 			elif ( (not HIGHDETAILS) and (not drewBird) ): #Low detail mode - just one bird
 				pygame.draw.rect(window, (0, 255, 0), (20,  player.y, BLOCKSIZE, BLOCKSIZE))
@@ -221,8 +285,9 @@ while True: # the game loop.
 
 	#Button controlling
 	for event in pygame.event.get():
-		if (event.type == 5) and (running) and (singlePlayer.alive): #click
-			singlePlayer.velocity = VELOCITYGAIN
+		if (event.type == 5) and (running): #click
+			if (not AI):
+				singlePlayer.velocity = VELOCITYGAIN
 			if (AI):
 				print("Score of alive birds:")
 				for i in range(len(multiPlayer)):
@@ -252,8 +317,8 @@ while True: # the game loop.
 		for p in pipes:
 			#Is Pipe gone? Pop it and spawn new one)
 			if (p.x < -30):
-				initPipe()
 				pipes.pop(0)
+				initPipe()
 				score += 1 #yay, score! (we passed a pipe)
 				for player in multiPlayer: #Reward living birds
 					if (player.alive):
@@ -272,7 +337,7 @@ while True: # the game loop.
 		#Bird logic. 
 		# Includes boundary checks (upper,lower end of screen)
 		# Inputs to the neural net (what does the bird see)
-		# FeedForward throught the neural net to decide if to jump
+		# FeedForward through the neural net to decide if to jump
 		noAlive = 0
 		currentfitness = 0
 		for player in multiPlayer:
@@ -307,8 +372,6 @@ while True: # the game loop.
 				#Jump or not?
 				if ( (AI) and (player.thinkIfJump()) ):
 					player.velocity = VELOCITYGAIN
-	
-		#TODO set highscore for non ai
 	
 		if (noAlive == 0):
 			running = False #Everybody is dead. so sad. - Endscreentime
@@ -345,31 +408,37 @@ while True: # the game loop.
 		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
 		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, (128, 0, 0))
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
-
+		
+		if (not AI): #User played - highscore set?
+			if (score > maxscore):
+				maxscore = score
+				highgen = generation
+		
 		if (AI): # Let' start breeding the corpses.
-			birdsToBreed = []
-			bestBird = -1
-			bestFitness = -10
-			for h in range(2): #Best two birds are taken
-				for i in range(len(multiPlayer)): #Find the best bird
-					player = multiPlayer[i]
-					if (player.fitness > bestFitness):
-						bestFitness = player.fitness
-						bestBird = i
-				if ( (h == 1) and (bestFitness > highscore) ): 
-					#new highscore! Let's keep the bird and update our scores
-					allTimeBestBird = multiPlayer[bestBird]
-					bestWeights = copy.deepcopy(multiPlayer[bestBird].weights)
-					print("highscore beaten {} - Generation {}".format(bestWeights, generation))
-					highscore = bestFitness
-					highgen = generation
-					maxscore = score
+			if ( (score > 0) or (maxscore > 0) ): #Only if atleast one bird made it through one pipe
+				birdsToBreed = []
+				bestBird = -1
+				bestFitness = -10
+				for h in range(2): #Best two birds are taken
+					for i in range(len(multiPlayer)): #Find the best bird
+						player = multiPlayer[i]
+						if (player.fitness > bestFitness):
+							bestFitness = player.fitness
+							bestBird = i
+					if ( (h == 1) and (bestFitness > highscore) ): 
+						#new highscore! Let's keep the bird and update our scores
+						allTimeBestBird = multiPlayer[bestBird]
+						bestWeights = copy.deepcopy(multiPlayer[bestBird].weights)
+						print("highscore beaten {} - Generation {}".format(bestWeights, generation))
+						highscore = bestFitness
+						highgen = generation
+						maxscore = score
 
-				#store the (two) best birds in the breeding list	
-				birdsToBreed.append(copy.deepcopy(multiPlayer[bestBird]))
-				multiPlayer.pop(i)
-			
-			print("Best genes of this generation: {}".format(birdsToBreed[0].weights))
+					#store the (two) best birds in the breeding list	
+					birdsToBreed.append(copy.deepcopy(multiPlayer[bestBird]))
+					multiPlayer.pop(i)
+				
+				print("Best genes of this generation: {}".format(birdsToBreed[0].weights))
 			generation += 1
 			init() #Here we go again
 			
