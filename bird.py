@@ -5,9 +5,6 @@ class Boord:
 	"""The Bird class. Contains information about the bird and also it's brain, breeding behaviour and decision making"""
 	y = 0
 	velocity = 0
-	distanceBot = 0
-	distanceTop = 0
-	distanceX = 0
 	fitness = 0
 	alive = True
 	weights = [] 
@@ -32,30 +29,29 @@ class Boord:
 		self.fitness = 0
 		self.alive = True
 		if (male == None): #New Bird, no parents
-			#complex network
-			#self.weights = np.random.normal(scale=1 / 4**.5, size=6)
 			#easy network
 			self.weights = np.random.normal(scale=1 / 4**.5, size=5)
 		elif (female == None): #Only one Parent (self mutate)
 			self.weights = male.weights
 			self.mutate()
-		else: # Two parents - Breed.
-			#complex network
-			#self.weights = np.random.normal(scale=1 / 4**.5, size=6)	
+		else: # Two parents - Breed.	
 			#easy network
-			self.weights = np.random.normal(scale=1 / 4**.5, size=5)
+			self.weights = [0,0,0,0,0]
 			self.breed(male, female)
 		
-	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance):
-		"""Updates what the bird sees
+	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance, HEIGHT, WIDTH):
+		"""Updates what the bird sees.
 		
 		INPUT:  pipeUpperY - The y coordinate of the upper pipe
 				pipeLowerY - The y coordinate of the lower pipe
 				pipeDistance - The x distance to the pipe pair
+				HEIGHT - The global screen height (used to normalize)
+				WIDTH - The global screen width (used to normalize)
 		OUTPUT: None"""
+		
 		self.distanceTop = pipeUpperY - self.y
 		self.distanceBot = pipeLowerY - self.y
-		self.distanceX = pipeDistance
+		self.distanceX = pipeDistance 
 		self.fitness += 0.01
 	
 	def handleCollision(self, HEIGHT, BLOCKSIZE, pipe):
@@ -95,6 +91,7 @@ class Boord:
 		#prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX, self.distanceCeil, self.distanceGround], self.weights))
 		#easy network
 		prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX, self.velocity], self.weights))
+		#print(prediction+BIAS)
 		if (prediction+BIAS > 0.5):
 			return True
 		else:

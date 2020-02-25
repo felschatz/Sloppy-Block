@@ -41,6 +41,38 @@ In blog, talk about pygame
 		dependencies
 		
 		BirdView, singleplayer, etc. via variables on run
+		
+		scaling the weights between 0 and 1 did not lead to any usable results and thus was cancelled.
+		
+		
+		Think about hidden layer
+			
+			# Network size
+			N_input = 4
+			N_hidden = 3
+			N_output = 2
+
+			np.random.seed(42)
+			# Make some fake data
+			X = np.random.randn(4)
+
+			weights_input_to_hidden = np.random.normal(0, scale=0.1, size=(N_input, N_hidden))
+			weights_hidden_to_output = np.random.normal(0, scale=0.1, size=(N_hidden, N_output))
+
+
+			# TODO: Make a forward pass through the network
+
+			hidden_layer_in = np.dot(X, weights_input_to_hidden)
+			hidden_layer_out = sigmoid(hidden_layer_in) # TODO should be relu
+
+			print('Hidden-layer Output:')
+			print(hidden_layer_out)
+
+			output_layer_in = np.dot(hidden_layer_out, weights_hidden_to_output)
+			output_layer_out = sigmoid(output_layer_in)
+
+			print('Output-layer Output:')
+			print(output_layer_out)
 """
 
 #Initialize constants
@@ -115,7 +147,7 @@ window = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
 pygame.display.set_caption('Sloppy Block')
 
 #GlobalVariable Setup
-bestWeights = [0,0,0,0]
+bestWeights = [0,0,0,0,0]
 player = None
 multiPlayer = []
 pipes = []
@@ -126,16 +158,17 @@ font = pygame.font.SysFont("comicsansms", 72)
 littlefont = pygame.font.SysFont("comicsansms", 16)
 generation = 1
 birdsToBreed = []
-highscore = -1
+highscore = 0
 highgen = 0
 allTimeBestBird = None
-maxscore = -1
+maxscore = 0
 blockPic = pygame.image.load("./img/block.png")
 upperPipePic = pygame.image.load("./img/upperPipe.png")
 lowerPipePic = pygame.image.load("./img/lowerPipe.png")
 backgroundPic = pygame.image.load("./img/background.png")
 cloudPic = pygame.image.load("./img/cloud.png")
 singlePlayer = None
+globalFitness = 0.0
 
 def init():
 	"""This method is called whenever the game is started. This may be one of these cases
@@ -324,7 +357,8 @@ init()
 
 while True: # the game loop.
 	draw(window) # Draw the fancy things.
-
+	currentfitness = 0.0
+	
 	#Button controlling
 	for event in pygame.event.get():
 		if (event.type == 5) and (running): #click
@@ -373,7 +407,7 @@ while True: # the game loop.
 		# Inputs to the neural net (what does the bird see)
 		# FeedForward through the neural net to decide if to jump
 		noAlive = 0
-		currentfitness = 0
+		
 		p = pipes[0] # Closest pipe
 		
 		for player in multiPlayer:
@@ -384,8 +418,9 @@ while True: # the game loop.
 					player.y += player.velocity
 					noAlive += 1
 				#Update what the bird sees to make decisions
-				player.processBrain(p.uppery, p.lowery, p.x)
+				player.processBrain(p.uppery, p.lowery, p.x, HEIGHT, WIDTH)
 				currentfitness = player.fitness
+				globalFitness = player.fitness
 				
 				#Jump or not?
 				if ( (AI) and (player.thinkIfJump()) ):
@@ -399,7 +434,7 @@ while True: # the game loop.
 			player = multiPlayer[i]
 			if ( (player.fitness > highscore) and (not player.bestReported) ):
 				player.bestReported = True
-				print("New Highscore in Generation {} with score {}. Genes: {}".format(generation, score, player.weights))
+				#print("New Highscore in Generation {} with score {}. Genes: {}".format(generation, score, player.weights))
 		
 		#Draw score and information
 		drawScores(alive=True, fitness=currentfitness, gen=generation, maxGen=highgen, noAlive=noAlive, FPS=FPSSES, score=score, highscore=maxscore)
@@ -412,17 +447,20 @@ while True: # the game loop.
 			drawScores(alive=False, score=score, highscore=maxscore)
 		
 		if (AI): # Let' start breeding the corpses.
-			if ( (score > 0) or (maxscore > 0) ): #Only if atleast one bird made it through one pipe
+			
+			bestFitness = -10
+			if ( (score > 0) or (maxscore > 0) or (globalFitness > 0.2) ): #Only if atleast one bird made it through one pipe
 				birdsToBreed = []
 				bestBird = -1
-				bestFitness = -10
 				for h in range(2): #Best two birds are taken
 					for i in range(len(multiPlayer)): #Find the best bird
 						player = multiPlayer[i]
 						if (player.fitness > bestFitness):
 							bestFitness = player.fitness
 							bestBird = i
-					if ( (h == 1) and (bestFitness > highscore) ): 
+							if (bestFitness >= highscore):
+								highscore = bestFitness
+					if ( (h == 1) and (bestFitness >= highscore) ): 
 						#new highscore! Let's keep the bird and update our scores
 						allTimeBestBird = multiPlayer[bestBird]
 						bestWeights = copy.deepcopy(multiPlayer[bestBird].weights)
@@ -436,6 +474,7 @@ while True: # the game loop.
 					multiPlayer.pop(i)
 				
 				print("Best genes of this generation: {}".format(birdsToBreed[0].weights))
+				
 				
 			generation += 1
 			init() #Here we go again
