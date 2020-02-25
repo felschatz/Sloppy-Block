@@ -8,8 +8,6 @@ class Boord:
 	distanceBot = 0
 	distanceTop = 0
 	distanceX = 0
-	distanceCeil = 0
-	distanceGround = 0
 	fitness = 0
 	alive = True
 	weights = [] 
@@ -48,6 +46,44 @@ class Boord:
 			self.weights = np.random.normal(scale=1 / 4**.5, size=5)
 			self.breed(male, female)
 		
+	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance):
+		"""Updates what the bird sees
+		
+		INPUT:  pipeUpperY - The y coordinate of the upper pipe
+				pipeLowerY - The y coordinate of the lower pipe
+				pipeDistance - The x distance to the pipe pair
+		OUTPUT: None"""
+		self.distanceTop = pipeUpperY - self.y
+		self.distanceBot = pipeLowerY - self.y
+		self.distanceX = pipeDistance
+		self.fitness += 0.01
+	
+	def handleCollision(self, HEIGHT, BLOCKSIZE, pipe):
+		"""Checks if the bird hits the upper bounds, lower bounds or a pipe
+		
+		INPUT:  HEIGHT - The global height of the screen
+				BLOCKSIZE - The global bird size
+				pipe - The pipe to handle the collision with
+		OUTPUT: None"""
+		#Check if player collided with upper or lower pipe
+		if ( ((pipe.x >= 20) and (pipe.x <= 20+BLOCKSIZE)) or ((pipe.x+20 >= 20) and (pipe.x+20 <= 20+BLOCKSIZE)) ): #pipe in X reach
+			if ( (self.alive) and ((self.y <= pipe.uppery) or (self.y >= pipe.lowery)) ): # also in y?
+				#alive player hits a pipe
+				self.alive = False
+				self.fitness -= 1
+						
+		#upper/lower bounds handling (did the bird hit the ground/ceil)
+		if (self.y + self.velocity > HEIGHT-BLOCKSIZE): #LowerBounds
+			self.y = HEIGHT-BLOCKSIZE
+			self.alive = False
+			self.fitness -= 1
+		elif (self.y + self.velocity < 1): #UpperBounds
+			self.y = 0
+			self.velocity = 0
+			self.alive = False
+			self.fitness -= 1
+			
+	
 	def thinkIfJump(self):
 		"""Forward pass through neural network, giving the decision if the bird should jump.
 		The neural network consists out of the y position of the bird, y distance to the bottom pipe, the y distance to the top pipe, the x distance to the pipe pair and the own velocity

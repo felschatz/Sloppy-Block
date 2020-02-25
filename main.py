@@ -65,9 +65,13 @@ startWithGenes = [-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.0080807
 #[-0.01870639 -1.77223725 -0.46061318 -0.08176     0.07842931]
 #[ 0.00629361 -1.84723725 -0.44061318 -0.08176     0.07842931]
 #[ 0.00629361 -1.77223725 -0.47061318 -0.08176     0.00342931]
+#Agent4
+#[-0.02561535 -0.97467903 -0.02342398  0.00120641 -0.09594272]
+#Agent5
+#[-0.03757691 -1.08349227  0.06785001  0.02430801  0.10286512]
+#[-0.03757691 -0.90849227 -0.03714999 -0.01569199  0.10286512]
 
 FPSSES = 60 #Increase by pressing +/-
-#VELOCITYGAIN = -15 #hardmode
 VELOCITYGAIN = -13 #easymode
 
 ReplayBest = False #Set to true, if you want to use trained network
@@ -275,7 +279,45 @@ def draw(window):
 				pygame.draw.rect(window, (0, 255, 0), (20,  player.y, BLOCKSIZE, BLOCKSIZE))
 				drewBird = True
 
-				
+def drawScores(alive, score, highscore, fitness=None, gen=None, maxGen=None, noAlive=None, FPS=None,):
+	"""Draw scores on screen. Score content depends on the fact, if the player(s) is/are alive
+	
+	INPUT:  alive - Which details to draw? If not alive: The player played himself and does not need all pieces of information
+			WIDTH - The global width
+			HEIGHT - The global height
+			fitness - The current fitness
+			gen - The current generation
+			maxGen - The generation with the highest score
+			noAlive - The number of alive birds
+			FPS - The frames per second, which are currently set
+			score - The current score
+			highscore - The best score, which was currently achieved			
+	OUTPUT: None"""
+	
+	if (alive):
+		text = font.render("Score {}".format(score), True, (0, 0, 128))
+		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
+		text = littlefont.render("Fitness {}".format(round(fitness, 2)), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), 0))
+		text = littlefont.render("Generation/Try {}".format(gen), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()))
+		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
+		text = littlefont.render("Best generation {}".format(maxGen), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*3))
+		text = littlefont.render("Blocks alive {}".format(noAlive), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*4))
+		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)".format(FPSSES), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*5))
+		text = littlefont.render("Press q to quit".format(FPS), True, (0, 0, 128))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*6))
+	else:
+		text = font.render("You is ded.", True, (128, 0, 0))
+		window.blit(text,(WIDTH/2 - text.get_width() // 2, HEIGHT/2 - text.get_height() // 2))
+		text = font.render("Score {}".format(score), True, (128, 0, 0))
+		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
+		text = littlefont.render("Highscore {}".format(round(highscore, 2)), True, (128, 0, 0))
+		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
 	
 #Let's roll! err.. fly!
 init()
@@ -309,7 +351,7 @@ while True: # the game loop.
 		#moveClouds
 		for c in clouds:
 			c.moveLeft()
-			if (c.x < -120): #Cloud out of sight? spawn new
+			if (c.x < -140): #Cloud out of sight? spawn new
 				initCloud()
 				clouds.pop(0)
 			
@@ -323,16 +365,8 @@ while True: # the game loop.
 				for player in multiPlayer: #Reward living birds
 					if (player.alive):
 						player.fitness += 3
-				
-			#Check if player collided with upper or lower pipe
-			if ( ((p.x >= 20) and (p.x <= 20+BLOCKSIZE)) or ((p.x+20 >= 20) and (p.x+20 <= 20+BLOCKSIZE)) ): #pipe in X reach
-				for player in multiPlayer: 
-					if ( (player.alive) and ((player.y <= p.uppery) or (player.y >= p.lowery)) ): # also in y?
-						#alive player hits a pipe
-						player.alive = False
-						player.fitness -= 1
-			
-			p.x -= 4 # Move the pipe to the left
+						
+			p.moveLeft() # Move the pipe to the left
 		
 		#Bird logic. 
 		# Includes boundary checks (upper,lower end of screen)
@@ -340,33 +374,17 @@ while True: # the game loop.
 		# FeedForward through the neural net to decide if to jump
 		noAlive = 0
 		currentfitness = 0
+		p = pipes[0] # Closest pipe
+		
 		for player in multiPlayer:
 			if (player.alive):
-				#Velocity and upper/lower bounds handling (did the bird hit the ground/ceil)
 				player.velocity += 1
-				if (player.y + player.velocity > HEIGHT-BLOCKSIZE): #LowerBounds
-					player.y = HEIGHT-BLOCKSIZE
-					player.alive = False
-					player.fitness -= 1
-				elif (player.y + player.velocity < 1): #UpperBounds
-					player.y = 0
-					player.velocity = 0
-					player.alive = False
-					player.fitness -= 1
-				else:
+				player.handleCollision(HEIGHT, BLOCKSIZE, p) #Did the bird hit anything?
+				if (player.alive):
 					player.y += player.velocity
 					noAlive += 1
-				
 				#Update what the bird sees to make decisions
-				p = pipes[0] # Closest pipe
-				
-				player.distanceTop = p.uppery - player.y
-				player.distanceBot = p.lowery - player.y
-				player.distanceCeil = player.y 
-				player.distanceGround = HEIGHT - player.y
-				
-				player.distanceX = p.x
-				player.fitness += 0.01
+				player.processBrain(p.uppery, p.lowery, p.x)
 				currentfitness = player.fitness
 				
 				#Jump or not?
@@ -384,35 +402,14 @@ while True: # the game loop.
 				print("New Highscore in Generation {} with score {}. Genes: {}".format(generation, score, player.weights))
 		
 		#Draw score and information
-		text = font.render("Score {}".format(score), True, (0, 0, 128))
-		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
-		text = littlefont.render("Fitness {}".format(round(currentfitness, 2)), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), 0))
-		text = littlefont.render("Generation/Try {}".format(generation), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()))
-		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
-		text = littlefont.render("Best generation {}".format(highgen), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*3))
-		text = littlefont.render("Blocks alive {}".format(noAlive), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*4))
-		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)".format(FPSSES), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*5))
-		text = littlefont.render("Press q to quit".format(FPSSES), True, (0, 0, 128))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*6))
+		drawScores(alive=True, fitness=currentfitness, gen=generation, maxGen=highgen, noAlive=noAlive, FPS=FPSSES, score=score, highscore=maxscore)
 		
 	else: #Player is dead (only seen, if user plays)
-		text = font.render("You is ded.", True, (128, 0, 0))
-		window.blit(text,(WIDTH/2 - text.get_width() // 2, HEIGHT/2 - text.get_height() // 2))
-		text = font.render("Score {}".format(score), True, (128, 0, 0))
-		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
-		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, (128, 0, 0))
-		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
-		
 		if (not AI): #User played - highscore set?
 			if (score > maxscore):
 				maxscore = score
 				highgen = generation
+			drawScores(alive=False, score=score, highscore=maxscore)
 		
 		if (AI): # Let' start breeding the corpses.
 			if ( (score > 0) or (maxscore > 0) ): #Only if atleast one bird made it through one pipe
@@ -439,9 +436,10 @@ while True: # the game loop.
 					multiPlayer.pop(i)
 				
 				print("Best genes of this generation: {}".format(birdsToBreed[0].weights))
+				
 			generation += 1
 			init() #Here we go again
-			
 
+	#pygame updates
 	pygame.display.update()
 	fps.tick(FPSSES)

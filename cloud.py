@@ -16,7 +16,6 @@ class cloud:
 		
 		OUTPUT: None"""
 				
-				
 		self.x = WIDTH + 140 + random.randint(0,140)
 		self.y = random.randint(0, int(HEIGHT/2))
 		
