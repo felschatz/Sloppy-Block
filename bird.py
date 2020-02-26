@@ -3,13 +3,6 @@ import random
 
 class Boord:
 	"""The Bird class. Contains information about the bird and also it's brain, breeding behaviour and decision making"""
-	y = 0
-	velocity = 0
-	fitness = 0
-	alive = True
-	weights = [] 
-	jump = False
-	bestReported = False
 	
 	def __init__(self, height, male = None, female = None):
 		"""The constructor. Either a bird, which is initialized by breeding, a mutated bird, or a standalone bird.
@@ -39,14 +32,12 @@ class Boord:
 			self.weights = [0,0,0,0,0]
 			self.breed(male, female)
 		
-	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance, HEIGHT, WIDTH):
+	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance):
 		"""Updates what the bird sees.
 		
 		INPUT:  pipeUpperY - The y coordinate of the upper pipe
 				pipeLowerY - The y coordinate of the lower pipe
 				pipeDistance - The x distance to the pipe pair
-				HEIGHT - The global screen height (used to normalize)
-				WIDTH - The global screen width (used to normalize)
 		OUTPUT: None"""
 		
 		self.distanceTop = pipeUpperY - self.y

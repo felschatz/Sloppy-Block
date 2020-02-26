@@ -102,9 +102,13 @@ startWithGenes = [-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.0080807
 #Agent5
 #[-0.03757691 -1.08349227  0.06785001  0.02430801  0.10286512]
 #[-0.03757691 -0.90849227 -0.03714999 -0.01569199  0.10286512]
+#Agent6 (previous 2500+, now 5500+)
+#[0.07501671614310677, -1.8986725080550475, 0.11944445335069942, 0.10365745399374016, -0.23842049490076667]
+#Agent7 (previous 1600+, now 100.000)
+#[-0.019484295705243557, -1.3649741315987505, -0.1789322087070267, 0.021642987041061858, 0.017495788379428195]
 
 FPSSES = 60 #Increase by pressing +/-
-VELOCITYGAIN = -13 #easymode
+VELOCITYGAIN = -13 #Global difficulty setting ;)
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself
@@ -117,9 +121,9 @@ for opt in sys.argv:
 	elif ( (opt == "-h") or (opt == "--help") ):
 		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
 		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
-		print("--humanPlayer (-p): Allows the human to fly instead of the birds")
+		print("--humanPlayer (-p): Allows the human to fly instead of the birds (play the game yourself)")
 		print("--noBirdView (-b): Disables the bird view (colored lines)")
-		print("--lowDetails (-d): Reduces details and thus increases FPS")
+		print("--lowDetails (-d): Reduces details and thus increases FPS (good for training)")
 		print("--help (-h): Show help")
 		sys.exit()
 	elif opt in ("-r", "--replayBest"):
@@ -134,9 +138,9 @@ for opt in sys.argv:
 		print("Unknown argument.\r\n")
 		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
 		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
-		print("--humanPlayer (-p): Allows the human to fly instead of the birds")
+		print("--humanPlayer (-p): Allows the human to fly instead of the birds (play the game yourself)")
 		print("--noBirdView (-b): Disables the bird view (colored lines)")
-		print("--lowDetails (-d): Reduces details and thus increases FPS")
+		print("--lowDetails (-d): Reduces details and thus increases FPS (good for training)")
 		print("--help (-h): Show help")
 		sys.exit()
    
@@ -145,6 +149,12 @@ pygame.init()
 fps = pygame.time.Clock()
 window = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32) 
 pygame.display.set_caption('Sloppy Block')
+blockPic = pygame.image.load("./img/block.png")
+upperPipePic = pygame.image.load("./img/upperPipe.png")
+lowerPipePic = pygame.image.load("./img/lowerPipe.png")
+backgroundPic = pygame.image.load("./img/background.png")
+cloudPic = pygame.image.load("./img/cloud.png")
+pygame.display.set_icon(blockPic) #set Icon
 
 #GlobalVariable Setup
 bestWeights = [0,0,0,0,0]
@@ -162,11 +172,6 @@ highscore = 0
 highgen = 0
 allTimeBestBird = None
 maxscore = 0
-blockPic = pygame.image.load("./img/block.png")
-upperPipePic = pygame.image.load("./img/upperPipe.png")
-lowerPipePic = pygame.image.load("./img/lowerPipe.png")
-backgroundPic = pygame.image.load("./img/background.png")
-cloudPic = pygame.image.load("./img/cloud.png")
 singlePlayer = None
 globalFitness = 0.0
 
@@ -327,22 +332,25 @@ def drawScores(alive, score, highscore, fitness=None, gen=None, maxGen=None, noA
 			highscore - The best score, which was currently achieved			
 	OUTPUT: None"""
 	
+	textColor = (0, 0, 128) 
+	if (not HIGHDETAILS):
+		textColor = (0, 128, 0) 
 	if (alive):
-		text = font.render("Score {}".format(score), True, (0, 0, 128))
+		text = font.render("Score {}".format(score), True, textColor)
 		window.blit(text,(WIDTH/2 - text.get_width() // 2, 0))
-		text = littlefont.render("Fitness {}".format(round(fitness, 2)), True, (0, 0, 128))
+		text = littlefont.render("Fitness {}".format(round(fitness, 2)), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), 0))
-		text = littlefont.render("Generation/Try {}".format(gen), True, (0, 0, 128))
+		text = littlefont.render("Generation/Try {}".format(gen), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()))
-		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, (0, 0, 128))
+		text = littlefont.render("Highscore {}".format(round(maxscore, 2)), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
-		text = littlefont.render("Best generation {}".format(maxGen), True, (0, 0, 128))
+		text = littlefont.render("Best generation {}".format(maxGen), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*3))
-		text = littlefont.render("Blocks alive {}".format(noAlive), True, (0, 0, 128))
+		text = littlefont.render("Blocks alive {}".format(noAlive), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*4))
-		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)".format(FPSSES), True, (0, 0, 128))
+		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)".format(FPSSES), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*5))
-		text = littlefont.render("Press q to quit".format(FPS), True, (0, 0, 128))
+		text = littlefont.render("Press q to quit".format(FPS), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*6))
 	else:
 		text = font.render("You is ded.", True, (128, 0, 0))
@@ -418,7 +426,7 @@ while True: # the game loop.
 					player.y += player.velocity
 					noAlive += 1
 				#Update what the bird sees to make decisions
-				player.processBrain(p.uppery, p.lowery, p.x, HEIGHT, WIDTH)
+				player.processBrain(p.uppery, p.lowery, p.x)
 				currentfitness = player.fitness
 				globalFitness = player.fitness
 				
@@ -434,7 +442,7 @@ while True: # the game loop.
 			player = multiPlayer[i]
 			if ( (player.fitness > highscore) and (not player.bestReported) ):
 				player.bestReported = True
-				#print("New Highscore in Generation {} with score {}. Genes: {}".format(generation, score, player.weights))
+				print("New Highscore in Generation {} with score {}. Genes: {}".format(generation, score, player.weights))
 		
 		#Draw score and information
 		drawScores(alive=True, fitness=currentfitness, gen=generation, maxGen=highgen, noAlive=noAlive, FPS=FPSSES, score=score, highscore=maxscore)

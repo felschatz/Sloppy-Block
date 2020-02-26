@@ -3,10 +3,6 @@ import random
 class cloud:
 	"""The cloud class is just for the looks
 	It passes in the background - every five ticks, one pixel"""
-	TICKLIMIT = 5
-	x = 0
-	y = 0
-	moveTick = 0
 	
 	def __init__(self, WIDTH, HEIGHT):
 		"""Constructor for a cloud, which will be moving from the right to the left
@@ -18,6 +14,8 @@ class cloud:
 				
 		self.x = WIDTH + 140 + random.randint(0,140)
 		self.y = random.randint(0, int(HEIGHT/2))
+		self.TICKLIMIT = 5
+		self.moveTick = 0
 		
 	def moveLeft(self):
 		"""Move the cloud every five frames from right to left

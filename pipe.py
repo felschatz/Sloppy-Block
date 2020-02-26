@@ -2,9 +2,6 @@ import random
 
 class pipe:
 	"""The pipe class. A pipe pair is an obstacle, which will be displayed on the screen"""
-	uppery = 0
-	lowery = 0
-	x = 0
 	
 	def __init__(self, WIDTH, HEIGHT, distanceToOldPipe):
 		"""The constructor of a pipe pair. A pipe pair is the obstacle the bird has to fly through.
