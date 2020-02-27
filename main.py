@@ -1,6 +1,7 @@
 import sys
 import copy
 import pygame
+import numpy as np
 import bird
 import pipe
 import cloud
@@ -45,7 +46,7 @@ In blog, talk about pygame
 		First simple neural net (input to output) faster training rates with essentially the same result.
 			Tried to increase difficulty, so the bird had to time its jump, but he did not learn it. possibly a deeper web would solve that
 
-		todo: print neural net on screen - large weight = large line
+		print neural net on screen - large weight = red - else green
 """
 
 #Initialize constants
@@ -53,17 +54,16 @@ WIDTH = 640 #screensize
 HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
-startInputGenes = [[ 0.00282854, -0.04676899,  0.00835218],
-					 [-0.80788501, -0.6283137,  -0.6984522 ],
-					 [-0.11198461, -0.04075977,  0.06365257],
-					 [-0.25018462, -0.01707968, -0.22694766],
-					 [-0.06919664,  0.03133189,  0.17977584]]
-startHiddenGenes = [[ 0.19149684],
-					[ 0.11103707],
- 					[-0.32901846]]
-
 FPSSES = 60 #Increase by pressing +/-
 VELOCITYGAIN = -13 #Global difficulty setting ;)
+startInputGenes = [[-0.24047012,  0.06449071,  0.01805345],
+				 [-0.16309943, -0.11327934, -0.26249623],
+				 [ 0.00458378, -0.03068388,  0.00265586],
+				 [-0.09145439,  0.08674626, -0.01053346],
+				 [-0.01368129, -0.15658374,  0.12540689]]
+startHiddenGenes = [[-0.05030027],
+					[-0.06806378],
+					[ 0.22046187]]
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself
@@ -116,7 +116,6 @@ cloudPic = pygame.image.load("./img/cloud.png")
 pygame.display.set_icon(blockPic) #set Icon
 
 #GlobalVariable Setup
-bestWeights = [0,0,0,0,0]
 bestInputWeights = [0,0,0,0,0]
 bestHiddenWeights = [0,0,0]
 player = None
@@ -244,7 +243,6 @@ def draw(window):
 	INPUT: window - Here will be drawn.
 	OUTPUT: None
 	"""
-
 	#Low Detail mode.
 	if (not HIGHDETAILS):
 		pygame.draw.rect(window, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
@@ -265,6 +263,9 @@ def draw(window):
 			window.blit(upperPipePic, (p.x, p.uppery-HEIGHT-160))
 			window.blit(lowerPipePic, (p.x, p.lowery))
 
+	if (AI):
+		drawNeuralNet(window)
+
 	#birds
 	drewBird = False
 	for player in multiPlayer:
@@ -281,7 +282,7 @@ def draw(window):
 
 				window.blit(rotated_block, new_rect.topleft)
 
-				if (birdView): # Draw what the birds can see
+				if ( (birdView) and (AI) ): # Draw what the birds can see
 					pygame.draw.line(window, (0, 255, 0),
 									(20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2),
 									(BLOCKSIZE/2 + player.distanceX,
@@ -359,6 +360,119 @@ def drawScores(alive, score, highscore, fitness=None, gen=None, maxGen=None,
 									True, (128, 0, 0))
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*2))
 
+def drawNeuralNet(window):
+	"""This function draws the neural net onto the screen
+
+	INPUT: None
+	OUTPUT: None"""
+
+	#Get alive bird and its weights to draw nicely later
+	birdo = getAliveBird()
+	if (birdo == None):
+		print("no birdo")
+		return
+
+	birdBrainInput = birdo.inputWeights
+	birdBrainHidden = birdo.hiddenWeights
+
+	minInput = np.min(birdBrainInput)
+	maxInput = np.max(birdBrainInput)
+	meanInput = np.sum(birdBrainInput) / len(birdBrainInput)
+
+	normInput = (birdBrainInput - minInput)/(maxInput-minInput)
+
+	minHidden = np.min(birdBrainHidden)
+	maxHidden = np.max(birdBrainHidden)
+	meanHidden = np.sum(birdBrainHidden) / len(birdBrainHidden)
+
+	normHidden = (birdBrainHidden - minHidden)/(maxHidden-minHidden)
+
+
+	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-250), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-200), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-150), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-100), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-50), 10, 1)
+
+	pygame.draw.line(window, (normInput[0][0]*255, 255-normInput[0][0]*255, 0),
+					(WIDTH-200+10, HEIGHT-250),
+					(WIDTH-125-10, HEIGHT-200), 1)
+
+	pygame.draw.line(window, (normInput[0][1]*255, 255-normInput[0][1]*255, 0),
+					(WIDTH-200+10, HEIGHT-250),
+					(WIDTH-125-10, HEIGHT-150), 1)
+
+	pygame.draw.line(window, (normInput[0][2]*255, 255-normInput[0][2]*255, 0),
+					(WIDTH-200+10, HEIGHT-250),
+					(WIDTH-125-10, HEIGHT-100), 1)
+
+	pygame.draw.line(window, (normInput[1][0]*255, 255-normInput[1][0]*255, 0),
+					(WIDTH-200+10, HEIGHT-200),
+					(WIDTH-125-10, HEIGHT-200), 1)
+	pygame.draw.line(window, (normInput[1][1]*255, 255-normInput[1][1]*255, 0),
+					(WIDTH-200+10, HEIGHT-200),
+					(WIDTH-125-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normInput[1][2]*255, 255-normInput[1][2]*255, 0),
+					(WIDTH-200+10, HEIGHT-200),
+					(WIDTH-125-10, HEIGHT-100), 1)
+
+	pygame.draw.line(window, (normInput[2][0]*255, 255-normInput[2][0]*255, 0),
+					(WIDTH-200+10, HEIGHT-150),
+					(WIDTH-125-10, HEIGHT-200), 1)
+	pygame.draw.line(window, (normInput[2][1]*255, 255-normInput[2][1]*255, 0),
+					(WIDTH-200+10, HEIGHT-150),
+					(WIDTH-125-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normInput[2][2]*255, 255-normInput[2][2]*255, 0),
+					(WIDTH-200+10, HEIGHT-150),
+					(WIDTH-125-10, HEIGHT-100), 1)
+
+	pygame.draw.line(window, (normInput[3][0]*255, 255-normInput[3][0]*255, 0),
+					(WIDTH-200+10, HEIGHT-100),
+					(WIDTH-125-10, HEIGHT-200), 1)
+	pygame.draw.line(window, (normInput[3][1]*255, 255-normInput[3][1]*255, 0),
+					(WIDTH-200+10, HEIGHT-100),
+					(WIDTH-125-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normInput[3][2]*255, 255-normInput[3][2]*255, 0),
+					(WIDTH-200+10, HEIGHT-100),
+					(WIDTH-125-10, HEIGHT-100), 1)
+
+	pygame.draw.line(window, (normInput[4][0]*255, 255-normInput[4][0]*255, 0),
+					(WIDTH-200+10, HEIGHT-50),
+					(WIDTH-125-10, HEIGHT-200), 1)
+	pygame.draw.line(window, (normInput[4][1]*255, 255-normInput[4][1]*255, 0),
+					(WIDTH-200+10, HEIGHT-50),
+					(WIDTH-125-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normInput[4][2]*255, 255-normInput[4][2]*255, 0),
+					(WIDTH-200+10, HEIGHT-50),
+					(WIDTH-125-10, HEIGHT-100), 1)
+
+	pygame.draw.circle(window, (255,0,0), (WIDTH-125, HEIGHT-200), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-125, HEIGHT-150), 10, 1)
+	pygame.draw.circle(window, (255,0,0), (WIDTH-125, HEIGHT-100), 10, 1)
+
+	pygame.draw.line(window, (normHidden[0]*255, 255-normHidden[0]*255, 0),
+					(WIDTH-125+10, HEIGHT-200),
+					(WIDTH-50-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normHidden[1]*255, 255-normHidden[1]*255, 0),
+					(WIDTH-125+10, HEIGHT-150),
+					(WIDTH-50-10, HEIGHT-150), 1)
+	pygame.draw.line(window, (normHidden[2]*255, 255-normHidden[2]*255, 0),
+					(WIDTH-125+10, HEIGHT-100),
+					(WIDTH-50-10, HEIGHT-150), 1)
+
+	pygame.draw.circle(window, (255,0,0), (WIDTH-50, HEIGHT-150), 10, 1)
+
+def getAliveBird():
+	"""Returns a random alive bird.
+
+	INPUT: None
+	OUTPUT: BirdObject or None, if no bird is alive"""
+	for player in multiPlayer:
+		if (player.alive):
+			return player
+
+	return None
+
 #Let's roll! err.. fly!
 init()
 
@@ -376,7 +490,7 @@ while True: # the game loop.
 				for i in range(len(multiPlayer)):
 					player = multiPlayer[i]
 					if (player.alive):
-						print("Genes of {}: Input: {}\n Hidden:".format(i,
+						print("Genes of {}: Input: {}\n Hidden: {}".format(i,
 								player.inputWeights, player.hiddenWeights))
 		elif (event.type == 5) and (not running) and (not singlePlayer.alive):
 			init() #restart
@@ -482,8 +596,8 @@ while True: # the game loop.
 						bestHiddenWeights =  copy.deepcopy(
 											multiPlayer[bestBird].hiddenWeights)
 						print("highscore beaten {}\n{} - Generation {}"
-								.format(player.inputWeights, player.hiddenWeights,
-										generation))
+								.format(player.inputWeights,
+										player.hiddenWeights, generation))
 						highscore = bestFitness
 						highgen = generation
 						maxscore = score
