@@ -5,10 +5,17 @@ class Boord:
 	"""The Bird class. Contains information about the bird and also it's brain, breeding behaviour and decision making"""
 
 	def __init__(self, height, male = None, female = None):
-		"""The constructor. Either a bird, which is initialized by breeding, a mutated bird, or a standalone bird.
-		INPUT:  height: The screen height. The bird will be initialized in the middle of it
-				male: Defaulted to None. If set: The brain (weights for NN) are taken over and mutated
-				female: Defaulted to None. If set with male: Averages the brains (weights for NN) of male and female and mutate
+		"""The constructor. Either a bird, which is initialized by breeding,
+			a mutated bird, or a standalone bird.
+		INPUT:  height: The screen height.
+						The bird will be initialized in the middle of it
+				male: 	Defaulted to None.
+						If set:
+						  The brain (weights for NN) are taken over and mutated
+				female: Defaulted to None
+				 		If set with male:
+						Averages the brains (weights for NN)
+						  of male and female and mutate
 
 		OUTPUT: None"""
 		self.bestReported = False
@@ -74,19 +81,20 @@ class Boord:
 
 
 	def thinkIfJump(self):
-		"""Forward pass through neural network, giving the decision if the bird should jump.
-		The neural network consists out of the y position of the bird, y distance to the bottom pipe, the y distance to the top pipe, the x distance to the pipe pair and the own velocity
+		"""Forward pass through neural network,
+		  	 giving the decision if the bird should jump.
+		The neural network consists out of the y position of the bird,
+			y distance to the bottom pipe, the y distance to the top pipe,
+			the x distance to the pipe pair and the own velocity.
 
 		INPUT:  None
-		OUTPUT: boolean, which determines if the bird should jump (True) or not (False)"""
+		OUTPUT: boolean, which determines,
+		 			if the bird should jump (True) or not (False)"""
 		BIAS = 0.5
-		#complex network
-		#prediction = self.sigmoid(np.dot([self.y, self.distanceBot, self.distanceTop, self.distanceX, self.distanceCeil, self.distanceGround], self.weights))
 		#easy network
 		prediction = self.sigmoid(np.dot([self.y, self.distanceBot,
 											self.distanceTop, self.distanceX,
 											self.velocity], self.weights))
-		#print(prediction+BIAS)
 		if (prediction+BIAS > 0.5):
 			return True
 		else:
@@ -107,7 +115,8 @@ class Boord:
 		self.weights = weights
 
 	def breed(self, male, female):
-		"""Generate a new brain (neural network) from two parent birds by averaging their brains and mutating them afterwards
+		"""Generate a new brain (neural network) from two parent birds
+		 	by averaging their brains and mutating them afterwards
 
 		INPUT:  male - The male bird object (of class bird)
 				female - The female bird object (of class bird)
@@ -117,7 +126,9 @@ class Boord:
 		self.mutate()
 
 	def mutate(self):
-		"""mutate (randomly apply the learning rate) the brain (neural network) of the birds brain by randomly changing the individual weights from 0 to +-0,125
+		"""mutate (randomly apply the learning rate) the brain (neural network)
+			of the birds brain by randomly changing
+			the individual weights from 0 to +-0,125
 
 		INPUT:  None
 		OUTPUT:	None"""
@@ -125,7 +136,7 @@ class Boord:
 			multiplier = 0
 			learning_rate = random.randint(0, 25) * 0.005
 			randBool = bool(random.getrandbits(1)) #adapt upwards or downwards?
-			randBool2 = bool(random.getrandbits(1)) #adapt upwards or downwards or not at all?
+			randBool2 = bool(random.getrandbits(1)) #or not at all?
 			if (randBool and randBool2):
 				multiplier = 1
 			elif (not randBool and randBool2):

@@ -119,9 +119,11 @@ for opt in sys.argv:
 	elif ( (opt == "-h") or (opt == "--help") ):
 		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
 		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
-		print("--humanPlayer (-p): Allows the human to fly instead of the birds (play the game yourself)")
+		print("--humanPlayer (-p): Allows the human to fly instead of the" \
+				" birds (play the game yourself)")
 		print("--noBirdView (-b): Disables the bird view (colored lines)")
-		print("--lowDetails (-d): Reduces details and thus increases FPS (good for training)")
+		print("--lowDetails (-d): Reduces details and thus increases FPS " \
+				"(good for training)")
 		print("--help (-h): Show help")
 		sys.exit()
 	elif opt in ("-r", "--replayBest"):
@@ -136,9 +138,11 @@ for opt in sys.argv:
 		print("Unknown argument.\r\n")
 		print("main.py --replayBest --humanPlayer --noBirdView --lowDetails")
 		print("--replayBest (-r): Gives one of the AI birds provenly good genes")
-		print("--humanPlayer (-p): Allows the human to fly instead of the birds (play the game yourself)")
+		print("--humanPlayer (-p): Allows the human to fly instead of the "\
+		 		"birds (play the game yourself)")
 		print("--noBirdView (-b): Disables the bird view (colored lines)")
-		print("--lowDetails (-d): Reduces details and thus increases FPS (good for training)")
+		print("--lowDetails (-d): Reduces details and thus increases FPS " \
+				"(good for training)")
 		print("--help (-h): Show help")
 		sys.exit()
 
@@ -174,12 +178,12 @@ singlePlayer = None
 globalFitness = 0.0
 
 def init():
-	"""This method is called whenever the game is started. This may be one of these cases
-	1) First start (no matter if user or AI plays)
-	2) If user plays: He died and clicked to restart
-	3) If AI plays: The whole generation went extinct. This is a restart
-
-	The method initializes Pipes, Clouds, the singleplayer bird, AI Birds
+	"""This method is called whenever the game is started.
+		This may be one of these cases
+		1) First start (no matter if user or AI plays)
+		2) If user plays: He died and clicked to restart
+		3) If AI plays: The whole generation went extinct. This is a restart
+		The method initializes Pipes, Clouds, the singleplayer bird, AI Birds
 
 	INPUT: None
 	OUTPUT: None"""
@@ -209,7 +213,8 @@ def init():
 		multiPlayer.append(singlePlayer)
 	else:
 		singlePlayer = bird.Boord(HEIGHT)
-		if (len(birdsToBreed) == 0): #This is the first init. If a new generation is born, we will go on in the else below.
+		if (len(birdsToBreed) == 0):
+			#This is the first init. New ones, are covered in the else below.
 			for _ in range(BIRDS):
 				#First time initialization of birds.
 				multiPlayer.append(bird.Boord(HEIGHT))
@@ -226,12 +231,15 @@ def init():
 			_.setWeights(bestWeights)
 			multiPlayer.append(_)
 
-			for _ in range(int(BIRDS/3)): #Breed and mutate the two best birds of the generation a couple of times
+			for _ in range(int(BIRDS/3)):
+				#Breed and mutate the two generations best birds sometimes
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[0],
 												birdsToBreed[1]))
-			for _ in range(int(BIRDS/3)): #Breed and mutate the best bird of the generation a couple of times
+			for _ in range(int(BIRDS/3)):
+				#Breed and mutate the generations best bird a couple of times
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[0]))
-			for _ in range(int(BIRDS/3)-2): #Breed and mutate the second best bird of the generation a couple of times
+			for _ in range(int(BIRDS/3)-2):
+				#Breed and mutate the generations second best bird asometimes
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
 
 			if (ReplayBest): #Used to replay a very good bird
@@ -242,7 +250,8 @@ def init():
 def initPipe(w = WIDTH):
 	"""Initializes a pipe, which will scroll in from the right
 
-	INPUT: w - The width of the screen. The pipe will be created to the right of it
+	INPUT: w - The width of the screen.
+				The pipe will be created to the right of it
 	OUTPUT: the initiated pipe inside of the global pipes list
 	"""
 	dist = 0
@@ -251,19 +260,25 @@ def initPipe(w = WIDTH):
 	return pipes.append(pipe.pipe(w, HEIGHT, dist))
 
 def initCloud(w = WIDTH):
-	"""Initializes a cloud, which will scroll in from the right, but slower than a pipe
+	"""Initializes a cloud, which will scroll in from the right,
+		but slower than a pipe
 
-	INPUT: w - The width of the screen. The cloud will be created to the right of it
+	INPUT: w - The width of the screen.
+				The cloud will be created to the right of it
 	OUTPUT: the initiated cloud inside of the global clouds list
 	"""
 	return clouds.append(cloud.cloud(w, HEIGHT))
 
 
 def draw(window):
-	""" The draw method, which is called within the FPS or as soon as possible (if slower)
+	""" The draw method, which is called within the FPS
+			or as soon as possible (if slower)
 	It handles the background, clouds, pipes, player(s) and information
-	If the static variable HIGHDETAILS is set it will print all birds and nice pictures and rotations.
-	If HIGHDETAILS is not set, only one bird will be drawn also everything is rectangles instead of pictures
+	If the static variable HIGHDETAILS is set
+		it will print all birds and nice pictures and rotations.
+	If HIGHDETAILS is not set
+	 	only one bird will be drawn
+		also everything is rectangles instead of pictures
 
 	INPUT: window - Here will be drawn.
 	OUTPUT: None
@@ -322,16 +337,20 @@ def draw(window):
 									(20 + BLOCKSIZE/2, player.y + BLOCKSIZE/2),
 									(20 + BLOCKSIZE/2,
 									player.y + BLOCKSIZE/2 - player.velocity))
-			elif ( (not HIGHDETAILS) and (not drewBird) ): #Low detail mode - just one bird
+			elif ( (not HIGHDETAILS) and (not drewBird) ):
+				#Low detail mode - just one bird to draw
 				pygame.draw.rect(window, (0, 255, 0),
 									(20,  player.y, BLOCKSIZE, BLOCKSIZE))
 				drewBird = True
 
 def drawScores(alive, score, highscore, fitness=None, gen=None, maxGen=None,
 				noAlive=None, FPS=None):
-	"""Draw scores on screen. Score content depends on the fact, if the player(s) is/are alive
+	"""Draw scores on screen. Score content depends on the fact,
+		if the player(s) is/are alive
 
-	INPUT:  alive - Which details to draw? If not alive: The player played himself and does not need all pieces of information
+	INPUT:  alive - Which details to draw? If not alive:
+	 				The player played himself
+					and does not need all pieces of information
 			WIDTH - The global width
 			HEIGHT - The global height
 			fitness - The current fitness
@@ -440,7 +459,8 @@ while True: # the game loop.
 		for player in multiPlayer:
 			if (player.alive):
 				player.velocity += 1
-				player.handleCollision(HEIGHT, BLOCKSIZE, p) #Did the bird hit anything?
+				#Did the bird hit anything?
+				player.handleCollision(HEIGHT, BLOCKSIZE, p)
 				if (player.alive):
 					player.y += player.velocity
 					noAlive += 1
@@ -479,7 +499,8 @@ while True: # the game loop.
 		if (AI): # Let' start breeding the corpses.
 
 			bestFitness = -10
-			if ( (score > 0) or (maxscore > 0) or (globalFitness > 0.2) ): #Only if atleast one bird made it through one pipe
+			if ( (score > 0) or (maxscore > 0) or (globalFitness > 0.2) ):
+				#Only if atleast one bird made it through one pipe
 				birdsToBreed = []
 				bestBird = -1
 				for h in range(2): #Best two birds are taken
