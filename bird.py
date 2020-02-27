@@ -31,17 +31,13 @@ class Boord:
 		self.alive = True
 		if (male == None): #New Bird, no parents
 			#easy network
-			self.weights = np.random.normal(scale=1 / 4**.5, size=5)
-
 			self.inputWeights = np.random.normal(0, scale=0.1, size=(5, 3))
 			self.hiddenWeights = np.random.normal(0, scale=0.1, size=(3, 1))
 		elif (female == None): #Only one Parent (self mutate)
-			self.weights = male.weights
 			self.inputWeights = male.inputWeights
 			self.hiddenWeights = male.hiddenWeights
 			self.mutate()
 		else: # Two parents - Breed.
-			self.weights = [0,0,0,0,0]
 			self.inputWeights = np.random.normal(0, scale=0.1, size=(5, 3))
 			self.hiddenWeights = np.random.normal(0, scale=0.1, size=(3, 1))
 			self.breed(male, female)
@@ -87,7 +83,7 @@ class Boord:
 			self.fitness -= 1
 
 
-	def thinkIfJump(self, thinkSimple=False):
+	def thinkIfJump(self):
 		"""Forward pass through neural network,
 		  	 giving the decision if the bird should jump.
 		The neural network consists out of the y position of the bird,
@@ -101,17 +97,10 @@ class Boord:
 		X = [self.y, self.distanceBot, self.distanceTop, self.distanceX,
 			self.velocity]
 
-		if (thinkSimple):
-			prediction = self.sigmoid(np.dot(X, self.weights))
-		else:
-			hidden_layer_in = np.dot(X, self.inputWeights)
-			#print(hidden_layer_in)
-			hidden_layer_out = self.sigmoid(hidden_layer_in)
-			#print(hidden_layer_out)
-			output_layer_in = np.dot(hidden_layer_out, self.hiddenWeights)
-			#print(output_layer_in)
-			prediction = self.sigmoid(output_layer_in)
-			#print(prediction)
+		hidden_layer_in = np.dot(X, self.inputWeights)
+		hidden_layer_out = self.sigmoid(hidden_layer_in)
+		output_layer_in = np.dot(hidden_layer_out, self.hiddenWeights)
+		prediction = self.sigmoid(output_layer_in)
 
 		if (prediction+BIAS > 0.5):
 			return True
@@ -150,9 +139,6 @@ class Boord:
 		INPUT:  male - The male bird object (of class bird)
 				female - The female bird object (of class bird)
 		OUTPUT:	None"""
-		for i in range(len(self.weights)):
-			self.weights[i] = (male.weights[i] + female.weights[i]) / 2
-
 		for i in range(len(self.inputWeights)):
 			self.inputWeights[i] = (male.inputWeights[i] +
 									female.inputWeights[i]) / 2
@@ -170,8 +156,6 @@ class Boord:
 
 		INPUT:  None
 		OUTPUT:	None"""
-		for i in range(len(self.weights)):
-			self.weights[i] = self.getMutatedGene(self.weights[i])
 		for i in range(len(self.inputWeights)):
 			self.inputWeights[i] = self.getMutatedGene(self.inputWeights[i])
 		for i in range(len(self.hiddenWeights)):

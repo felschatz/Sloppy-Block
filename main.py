@@ -53,7 +53,8 @@ WIDTH = 640 #screensize
 HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
-startWithGenes = [-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.00808077]
+startInputGenes = [0,0,0,0,0]
+startHiddenGenes = [0,0,0]
 #Agent1
 #[-0.00929749, -1.00681071,  0.18271884,  0.05724841,  0.03691923]
 #[-0.00929749, -1.00681071,  0.18271884,  0.05724841, -0.00808077]
@@ -222,7 +223,7 @@ def init():
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
 
 			if (ReplayBest): #Used to replay a very good bird
-				multiPlayer[2].setWeights(startWithGenes, [0,0,0]) # TODO
+				multiPlayer[2].setWeights(startInputGenes, startHiddenGenes)
 
 
 
@@ -394,7 +395,8 @@ while True: # the game loop.
 				for i in range(len(multiPlayer)):
 					player = multiPlayer[i]
 					if (player.alive):
-						print("Genes of {}: {}".format(i, player.weights)) # TODO PRINT ALL
+						print("Genes of {}: Input: {}\n Hidden:".format(i,
+								player.inputWeights, player.hiddenWeights))
 		elif (event.type == 5) and (not running) and (not singlePlayer.alive):
 			init() #restart
 		elif (event.type == 2): #keydown
@@ -460,8 +462,9 @@ while True: # the game loop.
 			player = multiPlayer[i]
 			if ( (player.fitness > highscore) and (not player.bestReported) ):
 				player.bestReported = True
-				print("New Highscore in Generation {} with score {}. Genes: {}"
-						.format(generation, score, player.weights)) #TODO INNER/HIDDEN
+				print("New Highscore in Generation {} with score {}. " \
+						"Genes: {}\n{}".format(generation, score,
+								player.inputWeights, player.hiddenWeights))
 
 		#Draw score and information
 		drawScores(alive=True, fitness=currentfitness, gen=generation,
@@ -493,11 +496,13 @@ while True: # the game loop.
 					if ( (h == 1) and (bestFitness >= highscore) ):
 						#new highscore! Let's keep the bird and update our scores
 						allTimeBestBird = multiPlayer[bestBird]
-						bestWeights = copy.deepcopy(multiPlayer[bestBird].weights) #TODO FUMBLE
-						bestInputWeights =  copy.deepcopy(multiPlayer[bestBird].inputWeights)
-						bestHiddenWeights =  copy.deepcopy(multiPlayer[bestBird].hiddenWeights)
-						print("highscore beaten {} - Generation {}"
-								.format(bestWeights, generation)) #TODO ALL WEIGHTS
+						bestInputWeights =  copy.deepcopy(
+											multiPlayer[bestBird].inputWeights)
+						bestHiddenWeights =  copy.deepcopy(
+											multiPlayer[bestBird].hiddenWeights)
+						print("highscore beaten {}\n{} - Generation {}"
+								.format(player.inputWeights, player.hiddenWeights,
+										generation))
 						highscore = bestFitness
 						highgen = generation
 						maxscore = score
@@ -506,10 +511,10 @@ while True: # the game loop.
 					birdsToBreed.append(copy.deepcopy(multiPlayer[bestBird]))
 					multiPlayer.pop(i)
 
-				print("Best genes of this generation: {}"
-						.format(birdsToBreed[0].weights)) #TODO ALL WEIGHTS
-
-
+				print("Best genes of this generation: {}\n{}"
+						.format(birdsToBreed[0].inputWeights,
+								birdsToBreed[0].hiddenWeights))
+								
 			generation += 1
 			init() #Here we go again
 
