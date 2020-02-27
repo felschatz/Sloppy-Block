@@ -42,35 +42,10 @@ In blog, talk about pygame
 
 		scaling the weights between 0 and 1 did not lead to any usable results and thus was cancelled.
 
+		First simple neural net (input to output) faster training rates with essentially the same result.
+			Tried to increase difficulty, so the bird had to time its jump, but he did not learn it. possibly a deeper web would solve that
 
-		Think about hidden layer
-
-			# Network size
-			N_input = 4
-			N_hidden = 3
-			N_output = 2
-
-			np.random.seed(42)
-			# Make some fake data
-			X = np.random.randn(4)
-
-			weights_input_to_hidden = np.random.normal(0, scale=0.1, size=(N_input, N_hidden))
-			weights_hidden_to_output = np.random.normal(0, scale=0.1, size=(N_hidden, N_output))
-
-
-			# TODO: Make a forward pass through the network
-
-			hidden_layer_in = np.dot(X, weights_input_to_hidden)
-			hidden_layer_out = sigmoid(hidden_layer_in) # TODO should be relu
-
-			print('Hidden-layer Output:')
-			print(hidden_layer_out)
-
-			output_layer_in = np.dot(hidden_layer_out, weights_hidden_to_output)
-			output_layer_out = sigmoid(output_layer_in)
-
-			print('Output-layer Output:')
-			print(output_layer_out)
+		todo: print neural net on screen - large weight = large line
 """
 
 #Initialize constants
@@ -160,6 +135,8 @@ pygame.display.set_icon(blockPic) #set Icon
 
 #GlobalVariable Setup
 bestWeights = [0,0,0,0,0]
+bestInputWeights = [0,0,0,0,0]
+bestHiddenWeights = [0,0,0]
 player = None
 multiPlayer = []
 pipes = []
@@ -223,12 +200,14 @@ def init():
 			multiPlayer = []
 			#keep the best bird of generation without mutation
 			_ = bird.Boord(HEIGHT)
-			_.setWeights(birdsToBreed[0].weights)
+			_.setWeights(birdsToBreed[0].inputWeights,
+						birdsToBreed[0].hiddenWeights)
 			multiPlayer.append(_)
 
 			#also keep the best of all time alive without mutation
 			_ = bird.Boord(HEIGHT)
-			_.setWeights(bestWeights)
+			_.setWeights(birdsToBreed[0].inputWeights,
+						birdsToBreed[0].hiddenWeights)
 			multiPlayer.append(_)
 
 			for _ in range(int(BIRDS/3)):
@@ -243,7 +222,7 @@ def init():
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
 
 			if (ReplayBest): #Used to replay a very good bird
-				multiPlayer[2].setWeights(startWithGenes)
+				multiPlayer[2].setWeights(startWithGenes, [0,0,0]) # TODO
 
 
 
@@ -415,7 +394,7 @@ while True: # the game loop.
 				for i in range(len(multiPlayer)):
 					player = multiPlayer[i]
 					if (player.alive):
-						print("Genes of {}: {}".format(i, player.weights))
+						print("Genes of {}: {}".format(i, player.weights)) # TODO PRINT ALL
 		elif (event.type == 5) and (not running) and (not singlePlayer.alive):
 			init() #restart
 		elif (event.type == 2): #keydown
@@ -470,7 +449,7 @@ while True: # the game loop.
 				globalFitness = player.fitness
 
 				#Jump or not?
-				if ( (AI) and (player.thinkIfJump()) ):
+				if ( (AI) and (player.thinkIfJump(thinkSimple=False)) ):
 					player.velocity = VELOCITYGAIN
 
 		if (noAlive == 0):
@@ -482,7 +461,7 @@ while True: # the game loop.
 			if ( (player.fitness > highscore) and (not player.bestReported) ):
 				player.bestReported = True
 				print("New Highscore in Generation {} with score {}. Genes: {}"
-						.format(generation, score, player.weights))
+						.format(generation, score, player.weights)) #TODO INNER/HIDDEN
 
 		#Draw score and information
 		drawScores(alive=True, fitness=currentfitness, gen=generation,
@@ -514,9 +493,11 @@ while True: # the game loop.
 					if ( (h == 1) and (bestFitness >= highscore) ):
 						#new highscore! Let's keep the bird and update our scores
 						allTimeBestBird = multiPlayer[bestBird]
-						bestWeights = copy.deepcopy(multiPlayer[bestBird].weights)
+						bestWeights = copy.deepcopy(multiPlayer[bestBird].weights) #TODO FUMBLE
+						bestInputWeights =  copy.deepcopy(multiPlayer[bestBird].inputWeights)
+						bestHiddenWeights =  copy.deepcopy(multiPlayer[bestBird].hiddenWeights)
 						print("highscore beaten {} - Generation {}"
-								.format(bestWeights, generation))
+								.format(bestWeights, generation)) #TODO ALL WEIGHTS
 						highscore = bestFitness
 						highgen = generation
 						maxscore = score
@@ -526,7 +507,7 @@ while True: # the game loop.
 					multiPlayer.pop(i)
 
 				print("Best genes of this generation: {}"
-						.format(birdsToBreed[0].weights))
+						.format(birdsToBreed[0].weights)) #TODO ALL WEIGHTS
 
 
 			generation += 1

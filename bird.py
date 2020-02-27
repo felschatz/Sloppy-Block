@@ -2,7 +2,8 @@ import numpy as np
 import random
 
 class Boord:
-	"""The Bird class. Contains information about the bird and also it's brain, breeding behaviour and decision making"""
+	"""The Bird class. Contains information about the bird and also it's brain,
+		breeding behaviour and decision making"""
 
 	def __init__(self, height, male = None, female = None):
 		"""The constructor. Either a bird, which is initialized by breeding,
@@ -31,12 +32,18 @@ class Boord:
 		if (male == None): #New Bird, no parents
 			#easy network
 			self.weights = np.random.normal(scale=1 / 4**.5, size=5)
+
+			self.inputWeights = np.random.normal(0, scale=0.1, size=(5, 3))
+			self.hiddenWeights = np.random.normal(0, scale=0.1, size=(3, 1))
 		elif (female == None): #Only one Parent (self mutate)
 			self.weights = male.weights
+			self.inputWeights = male.inputWeights
+			self.hiddenWeights = male.hiddenWeights
 			self.mutate()
 		else: # Two parents - Breed.
-			#easy network
 			self.weights = [0,0,0,0,0]
+			self.inputWeights = np.random.normal(0, scale=0.1, size=(5, 3))
+			self.hiddenWeights = np.random.normal(0, scale=0.1, size=(3, 1))
 			self.breed(male, female)
 
 	def processBrain(self, pipeUpperY, pipeLowerY, pipeDistance):
@@ -80,7 +87,7 @@ class Boord:
 			self.fitness -= 1
 
 
-	def thinkIfJump(self):
+	def thinkIfJump(self, thinkSimple=False):
 		"""Forward pass through neural network,
 		  	 giving the decision if the bird should jump.
 		The neural network consists out of the y position of the bird,
@@ -90,29 +97,51 @@ class Boord:
 		INPUT:  None
 		OUTPUT: boolean, which determines,
 		 			if the bird should jump (True) or not (False)"""
-		BIAS = 0.5
-		#easy network
-		prediction = self.sigmoid(np.dot([self.y, self.distanceBot,
-											self.distanceTop, self.distanceX,
-											self.velocity], self.weights))
+		BIAS = 0
+		X = [self.y, self.distanceBot, self.distanceTop, self.distanceX,
+			self.velocity]
+
+		if (thinkSimple):
+			prediction = self.sigmoid(np.dot(X, self.weights))
+		else:
+			hidden_layer_in = np.dot(X, self.inputWeights)
+			#print(hidden_layer_in)
+			hidden_layer_out = self.sigmoid(hidden_layer_in)
+			#print(hidden_layer_out)
+			output_layer_in = np.dot(hidden_layer_out, self.hiddenWeights)
+			#print(output_layer_in)
+			prediction = self.sigmoid(output_layer_in)
+			#print(prediction)
+
 		if (prediction+BIAS > 0.5):
 			return True
 		else:
 			return False
+
+	def relu(self, x):
+		"""The relu actication function for the neural network
+
+		INPUT: x - The value to apply the ReLu function on
+		OUTPUT: The applied ReLus function value"""
+
+		return np.maximum(x, 0)
 
 	def sigmoid(self, x):
 		"""The sigmoid activation function for the neural net
 
 		INPUT: x - The value to calculate
 		OUTPUT: The calculated result"""
+
 		return 1 / (1 + np.exp(-x))
 
-	def setWeights(self, weights):
+	def setWeights(self, inputWeights, hiddenWeights):
 		"""Overwrites the current weights of the birds brain (neural network).
 
-		INPUT:  weights: The weights for the neural network
+		INPUT:  inputWeights: The weights for the neural network (input layer)
+				hiddenWeights: The weights for the neural network (hidden layer)
 		OUTPUT:	None"""
-		self.weights = weights
+		self.inputWeights = inputWeights
+		self.hiddenWeights = hiddenWeights
 
 	def breed(self, male, female):
 		"""Generate a new brain (neural network) from two parent birds
@@ -123,6 +152,15 @@ class Boord:
 		OUTPUT:	None"""
 		for i in range(len(self.weights)):
 			self.weights[i] = (male.weights[i] + female.weights[i]) / 2
+
+		for i in range(len(self.inputWeights)):
+			self.inputWeights[i] = (male.inputWeights[i] +
+									female.inputWeights[i]) / 2
+
+		for i in range(len(self.hiddenWeights)):
+			self.hiddenWeights[i] = (male.hiddenWeights[i] +
+									female.hiddenWeights[i]) / 2
+
 		self.mutate()
 
 	def mutate(self):
@@ -133,13 +171,27 @@ class Boord:
 		INPUT:  None
 		OUTPUT:	None"""
 		for i in range(len(self.weights)):
-			multiplier = 0
-			learning_rate = random.randint(0, 25) * 0.005
-			randBool = bool(random.getrandbits(1)) #adapt upwards or downwards?
-			randBool2 = bool(random.getrandbits(1)) #or not at all?
-			if (randBool and randBool2):
-				multiplier = 1
-			elif (not randBool and randBool2):
-				multiplier = -1
+			self.weights[i] = self.getMutatedGene(self.weights[i])
+		for i in range(len(self.inputWeights)):
+			self.inputWeights[i] = self.getMutatedGene(self.inputWeights[i])
+		for i in range(len(self.hiddenWeights)):
+			self.hiddenWeights[i] = self.getMutatedGene(self.hiddenWeights[i])
 
-			self.weights[i] = self.weights[i] + learning_rate*multiplier
+	def getMutatedGene(self, weight):
+		"""mutate the input number
+
+		INPUT: weight - The weight to mutate
+		OUTPUT: mutatedWeight - The mutated weight"""
+
+		multiplier = 0
+		learning_rate = random.randint(0, 25) * 0.005
+		randBool = bool(random.getrandbits(1)) #adapt upwards or downwards?
+		randBool2 = bool(random.getrandbits(1)) #or not at all?
+		if (randBool and randBool2):
+			multiplier = 1
+		elif (not randBool and randBool2):
+			multiplier = -1
+
+		mutatedWeight = weight + learning_rate*multiplier
+
+		return mutatedWeight
