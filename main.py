@@ -6,49 +6,6 @@ import bird
 import pipe
 import cloud
 
-"""TODO:
-Comment
-In blog, talk about pygame
-		Genetic algorithms https://towardsdatascience.com/artificial-neural-networks-optimization-using-genetic-algorithm-with-python-1fe8ed17733e
-		https://blog.coast.ai/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
-
-		https://homepages.inf.ed.ac.uk/pkoehn/publications/gann94.pdf
-
-		Dino NN
-		https://heartbeat.fritz.ai/automating-chrome-dinosaur-game-part-1-290578f13907
-		https://github.com/aayusharora/GeneticAlgorithms/blob/master/part1/src/nn.js
-
-		Noteworthy that it does not jump to time the pipe (so it will pass the pipe in the middle). this might eb solved with a deeper neural network
-		better fitness algorithm. adapt weights stronger, which failed (hit upper pipe? bad fitness on upper pipe distance - hit ground? bad fitness there)
-		Mutation method change - instead of taking average of first two birds - exchange whole genes
-
-		Screenshots of complex and easy network with connections
-
-		Possible Improvement: Only breed if died not too far from each other.
-
-		core differences to the known original:
-			Harder. The jumping power is far closer to the length of the pipe opening
-			Harder. The original has the pipe opening starting closer to the middle
-			Harder. The pipe distance varies and is not always the same
-
-		Making the game easier (decrease jump strength, increase distance between the pipes) makes the network learn much faster, since the error tolerance is higher
-
-		tackle local optimum problem, if no improvement has been made over 10 generations
-
-		adapt mutations based on score (the higher the score, the lower the mutation)
-
-		dependencies
-
-		BirdView, singleplayer, etc. via variables on run
-
-		scaling the weights between 0 and 1 did not lead to any usable results and thus was cancelled.
-
-		First simple neural net (input to output) faster training rates with essentially the same result.
-			Tried to increase difficulty, so the bird had to time its jump, but he did not learn it. possibly a deeper web would solve that
-
-		print neural net on screen - large weight = red - else green
-"""
-
 #Initialize constants
 WIDTH = 640 #screensize
 HEIGHT = 480 #screensize
@@ -387,7 +344,6 @@ def drawNeuralNet(window):
 
 	normHidden = (birdBrainHidden - minHidden)/(maxHidden-minHidden)
 
-
 	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-250), 10, 1)
 	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-200), 10, 1)
 	pygame.draw.circle(window, (255,0,0), (WIDTH-200, HEIGHT-150), 10, 1)
@@ -571,10 +527,10 @@ while True: # the game loop.
 			if (score > maxscore):
 				maxscore = score
 				highgen = generation
+
 			drawScores(alive=False, score=score, highscore=maxscore)
 
 		if (AI): # Let' start breeding the corpses.
-
 			bestFitness = -10
 			if ( (score > 0) or (maxscore > 0) or (globalFitness > 0.2) ):
 				#Only if atleast one bird made it through one pipe

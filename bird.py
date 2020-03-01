@@ -66,7 +66,7 @@ class Boord:
 		if ( ((pipe.x >= 20) and (pipe.x <= 20+BLOCKSIZE)) or ((pipe.x+20 >= 20)
 		 			and (pipe.x+20 <= 20+BLOCKSIZE)) ): #pipe in X reach
 			if ( (self.alive) and ((self.y <= pipe.uppery)
-			 		or (self.y >= pipe.lowery)) ): # also in y?
+			 		or (self.y+BLOCKSIZE >= pipe.lowery)) ): # also in y?
 				#alive player hits a pipe
 				self.alive = False
 				self.fitness -= 1
