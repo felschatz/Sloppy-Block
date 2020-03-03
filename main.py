@@ -12,15 +12,15 @@ HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
 FPSSES = 60 #Increase by pressing +/-
-VELOCITYGAIN = -13 #Global difficulty setting ;)
-startInputGenes = [[-0.24047012,  0.06449071,  0.01805345],
-				 [-0.16309943, -0.11327934, -0.26249623],
-				 [ 0.00458378, -0.03068388,  0.00265586],
-				 [-0.09145439,  0.08674626, -0.01053346],
-				 [-0.01368129, -0.15658374,  0.12540689]]
-startHiddenGenes = [[-0.05030027],
-					[-0.06806378],
-					[ 0.22046187]]
+VELOCITYGAIN = -15 #Global difficulty setting ;)
+startInputGenes = 	[[-0.04723041, -0.21824832, -0.01568856],
+					 [-0.47070966, -0.28280432,  0.59933907],
+					 [-0.29482412, -0.12785787,  0.30327645],
+					 [ 0.00882499,  0.08257632,  0.02904411],
+					 [ 0.05384075,  0.17553523, -0.10760292]]
+startHiddenGenes =	[[ 0.07127686],
+					[ 0.02199678],
+					[-0.23601705]]
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself
@@ -91,6 +91,7 @@ allTimeBestBird = None
 maxscore = 0
 singlePlayer = None
 globalFitness = 0.0
+respawn = False
 
 def init():
 	"""This method is called whenever the game is started.
@@ -103,7 +104,7 @@ def init():
 	INPUT: None
 	OUTPUT: None"""
 
-	global player, running, score, multiPlayer, singlePlayer
+	global player, running, score, multiPlayer, singlePlayer, respawn
 
 	#Initialize Pipes
 	while (len(pipes) > 0): #Kill existing
@@ -155,14 +156,21 @@ def init():
 			for _ in range(int(BIRDS/3)):
 				#Breed and mutate the generations best bird a couple of times
 				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[0]))
+
 			for _ in range(int(BIRDS/3)-2):
-				#Breed and mutate the generations second best bird asometimes
-				multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
+				if (respawn): #Bad genes - replace some.
+					multiPlayer.append(bird.Boord(HEIGHT))
+				else:
+					#Breed and mutate the generations second best bird asometimes
+					multiPlayer.append(bird.Boord(HEIGHT, birdsToBreed[1]))
 
 			if (ReplayBest): #Used to replay a very good bird
 				multiPlayer[2].setWeights(startInputGenes, startHiddenGenes)
 
-
+			if (respawn):
+				respawn = False
+				print("Due to natural selection - one third of birds " +
+						"receives new genes")
 
 def initPipe(w = WIDTH):
 	"""Initializes a pipe, which will scroll in from the right
@@ -305,7 +313,7 @@ def drawScores(alive, score, highscore, fitness=None, gen=None, maxGen=None,
 		text = littlefont.render("Max FPS: {} (KeyLeft and KeyRight to change)"
 									.format(FPSSES), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*5))
-		text = littlefont.render("Press q to quit".format(FPS), True, textColor)
+		text = littlefont.render("Press q to quit, d to toggle details, b to toggle bird view".format(FPS), True, textColor)
 		window.blit(text,(WIDTH - text.get_width(), text.get_height()*6))
 	else:
 		text = font.render("You is ded.", True, (128, 0, 0))
@@ -326,7 +334,6 @@ def drawNeuralNet(window):
 	#Get alive bird and its weights to draw nicely later
 	birdo = getAliveBird()
 	if (birdo == None):
-		print("no birdo")
 		return
 
 	birdBrainInput = birdo.inputWeights
@@ -455,9 +462,13 @@ while True: # the game loop.
 				FPSSES -= 15
 			elif (event.key == pygame.K_RIGHT):
 				FPSSES += 15
-			elif (event.key == 113):
+			elif (event.key == 113): #q
 				pygame.quit()
 				sys.exit()
+			elif (event.key == 100): #d
+				HIGHDETAILS = not HIGHDETAILS
+			elif (event.key == 98): #b
+				birdView = not birdView
 
 	if (running): #Atleast one bird is alive - Let's calculate
 		#moveClouds
@@ -531,12 +542,12 @@ while True: # the game loop.
 			drawScores(alive=False, score=score, highscore=maxscore)
 
 		if (AI): # Let' start breeding the corpses.
-			bestFitness = -10
 			if ( (score > 0) or (maxscore > 0) or (globalFitness > 0.2) ):
 				#Only if atleast one bird made it through one pipe
 				birdsToBreed = []
-				bestBird = -1
 				for h in range(2): #Best two birds are taken
+					bestBird = -1
+					bestFitness = -10
 					for i in range(len(multiPlayer)): #Find the best bird
 						player = multiPlayer[i]
 						if (player.fitness > bestFitness):
@@ -565,6 +576,10 @@ while True: # the game loop.
 				print("Best genes of this generation: {}\n{}"
 						.format(birdsToBreed[0].inputWeights,
 								birdsToBreed[0].hiddenWeights))
+
+			#If no progress was made in the last 50 generations - new genes.
+			if (generation-highgen > 50):
+				respawn = True
 
 			generation += 1
 			init() #Here we go again

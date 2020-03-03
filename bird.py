@@ -157,9 +157,11 @@ class Boord:
 		INPUT:  None
 		OUTPUT:	None"""
 		for i in range(len(self.inputWeights)):
-			self.inputWeights[i] = self.getMutatedGene(self.inputWeights[i])
+			for j in range(len(self.inputWeights[i])):
+				self.inputWeights[i][j] = self.getMutatedGene(self.inputWeights[i][j])
 		for i in range(len(self.hiddenWeights)):
-			self.hiddenWeights[i] = self.getMutatedGene(self.hiddenWeights[i])
+			for j in range(len(self.hiddenWeights[i])):
+				self.hiddenWeights[i][j] = self.getMutatedGene(self.hiddenWeights[i][j])
 
 	def getMutatedGene(self, weight):
 		"""mutate the input number
