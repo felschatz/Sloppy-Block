@@ -12,15 +12,15 @@ HEIGHT = 480 #screensize
 BLOCKSIZE = 20 #Blocks Fatness for bounding box
 BIRDS = 90 #No of Blocks to spawn
 FPSSES = 60 #Increase by pressing +/-
-VELOCITYGAIN = -15 #Global difficulty setting ;)
-startInputGenes = 	[[-0.04723041, -0.21824832, -0.01568856],
-					 [-0.47070966, -0.28280432,  0.59933907],
-					 [-0.29482412, -0.12785787,  0.30327645],
-					 [ 0.00882499,  0.08257632,  0.02904411],
-					 [ 0.05384075,  0.17553523, -0.10760292]]
-startHiddenGenes =	[[ 0.07127686],
-					[ 0.02199678],
-					[-0.23601705]]
+VELOCITYGAIN = -13 #Global difficulty setting ;)
+startInputGenes = 	[[-0.25244961, -0.02443948, -0.04505735],
+					 [ 0.12788692, -0.80005974, -0.13429437],
+					 [-0.04354413, -0.1765287,   0.02494303],
+					 [-0.21573609,  0.03459365,  0.07858856],
+					 [-0.38443484, -0.00344752, -0.19479629]]
+startHiddenGenes =	[[-0.49624301],
+					 [ 0.1133263 ],
+					 [-0.00213796]]
 
 ReplayBest = False #Set to true, if you want to use trained network
 AI = True # Set to false, if you want to play yourself

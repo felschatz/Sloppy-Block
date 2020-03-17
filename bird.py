@@ -93,7 +93,7 @@ class Boord:
 		INPUT:  None
 		OUTPUT: boolean, which determines,
 		 			if the bird should jump (True) or not (False)"""
-		BIAS = 0
+		BIAS = -0.5
 		X = [self.y, self.distanceBot, self.distanceTop, self.distanceX,
 			self.velocity]
 
@@ -102,7 +102,7 @@ class Boord:
 		output_layer_in = np.dot(hidden_layer_out, self.hiddenWeights)
 		prediction = self.sigmoid(output_layer_in)
 
-		if (prediction+BIAS > 0.5):
+		if (prediction+BIAS > 0):
 			return True
 		else:
 			return False
