@@ -145,8 +145,8 @@ def init():
 
 			#also keep the best of all time alive without mutation
 			_ = bird.Boord(HEIGHT)
-			_.setWeights(birdsToBreed[0].inputWeights,
-						birdsToBreed[0].hiddenWeights)
+			_.setWeights(bestInputWeights,
+						bestHiddenWeights)
 			multiPlayer.append(_)
 
 			for _ in range(int(BIRDS/3)):
