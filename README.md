@@ -3,11 +3,11 @@
 ## Description:
 A genetic neural network learning approach to solve a flappy bird clone.
 You may choose to either play yourself (by providing the -p command line parameter) or let the AI play.
-If you would like to get a deeper understanding about what is happening and how the project grew over time, have a look at ![This blog post](https://medium.com/@christian_deveaux/a-genetic-algorithm-solving-flappy-bird-using-data-science-87bcd981cefd) and of course the code itself.
+If you would like to get a deeper understanding about what is happening and how the project grew over time, have a look at [This blog post](https://medium.com/@christian_deveaux/a-genetic-algorithm-solving-flappy-bird-using-data-science-87bcd981cefd) and of course the code itself.
 
 Enjoy!
 
-![Sloppy Block AI Gameplay](https://cdn-images-1.medium.com/max/600/1*b1WVkVQXuLDjzjV19VKBGA.gif)
+![Sloppy Block AI Gameplay](https://cdn-images-1.medium.com/max/800/1*8B636GWDV3arTgVhhi_YHQ.gif)
 
 ## Motivation and Summary
 As a passionate gamer, who is diving into the field of data science, I was thinking about a project to put my skills to use and is a challenge at the same time.
