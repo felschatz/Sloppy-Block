@@ -150,9 +150,8 @@ class Boord:
 		self.mutate()
 
 	def mutate(self):
-		"""mutate (randomly apply the learning rate) the brain (neural network)
-			of the birds brain by randomly changing
-			the individual weights from 0 to +-0,125
+		"""mutate (randomly apply the learning rate) the birds brain
+			(neural network) randomly changing the individual weights
 
 		INPUT:  None
 		OUTPUT:	None"""
@@ -164,7 +163,7 @@ class Boord:
 				self.hiddenWeights[i][j] = self.getMutatedGene(self.hiddenWeights[i][j])
 
 	def getMutatedGene(self, weight):
-		"""mutate the input number
+		"""mutate the input by -0.125 to 0.125 or not at all
 
 		INPUT: weight - The weight to mutate
 		OUTPUT: mutatedWeight - The mutated weight"""

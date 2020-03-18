@@ -2,23 +2,23 @@
 
 ## Description:
 A genetic neural network learning approach to solve a flappy bird clone.
-You may choose to either play yourself (by providing the -p command line parameter) or let the AI play
-If you would like to get a deeper understanding about the coding have a look at `TODO Medium URL` and of course the code itself.
+You may choose to either play yourself (by providing the -p command line parameter) or let the AI play.
+If you would like to get a deeper understanding about what is happening and how the project grew over time, have a look at ![This blog post](https://medium.com/@christian_deveaux/a-genetic-algorithm-solving-flappy-bird-using-data-science-87bcd981cefd) and of course the code itself.
 
 Enjoy!
 
-![Sloppy Block AI Gameplay](https://cdn-images-1.medium.com/max/800/1*9Ip8MZy4KYrDLoRaJhDg3w.gif)
+![Sloppy Block AI Gameplay](https://cdn-images-1.medium.com/max/600/1*b1WVkVQXuLDjzjV19VKBGA.gif)
 
 ## Motivation and Summary
-As a passionate gamer, who is diving into the field of data science, I was thinking about a project to put my skills to use and is a challenge at the same time. 
+As a passionate gamer, who is diving into the field of data science, I was thinking about a project to put my skills to use and is a challenge at the same time.
 What better way than to program a game, which an AI learns to play using data science methods.
 I have heard from genetic algorithms before, but never programmed them myself.
 
-As you can see from the embedded gifs, the machine is able to master the game, which fulfills the goal I have set to myself. Nevertheless I made further improvements and tweaks to the code after the initial completion of the project to smoothen out the game. For example, the graphics were introduced after the AI mastered the game. The inputs of the neural network went through some changes as well. Bird's view was implemented, etc. etc. 
+As you can see from the embedded gifs, the machine is able to master the game, which fulfills the goal I have set to myself. Nevertheless I made further improvements and tweaks to the code after the initial completion of the project to smoothen out the game. For example, the graphics were introduced after the AI mastered the game. The inputs of the neural network went through some changes as well. Bird's view was implemented, etc. etc.
 
 I hope you have a little bit of fun/learning effect when going through the code/game. I definitely enjoyed programming it.
 
-![Sloppy Block AI Training](https://cdn-images-1.medium.com/max/800/1*yq1o8Egu2exe_O6k0ijJHA.gif)
+![Sloppy Block AI Training](https://cdn-images-1.medium.com/max/600/1*nYnD-fJXfajOrCWzD6Vtxg.gif)
 
 ## Prerequisites/Python modules
 
@@ -37,11 +37,11 @@ There are a few command line arguments, which may be passed. By default none of 
 	* `--noBirdView (-b)`: Disables the bird view (colored lines)
 	* `--lowDetails (-d)`: Reduces details and thus increases FPS (good for training)
 	* `--help (-h)`: Show help
-	
+
 ### Repository structure
 * `/img` - Assets used in the application
-    * `background.png` - The background picture
-    * `block.png` - A sloppy block (The player/AI)
+  * `background.png` - The background picture
+  * `block.png` - A sloppy block (The player/AI)
 	* `cloud.png` - A cloud in the background, which scrolls from right to left
 	* `lowerpipe.png` - A picture for the lower boundary of a pipe pair
 	* `upperpipe.png` - A picture for the upper boundary of a pipe pair
